@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>한살림 & 초록마을 서울/수도권 통합 지도</title>
+    <title>한살림 & 초록마을 통합 지도 (최종 보강)</title>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCd6QIRzWvsTTbfVUQkcqGyz-fXuQ4DTbU&libraries=geometry"></script>
     <style>
         html, body { margin: 0; padding: 0; height: 100%; font-family: 'Malgun Gothic', sans-serif;}
@@ -19,7 +19,7 @@
             position: absolute; bottom: 30px; right: 10px; z-index: 1000;
             background: white; padding: 10px; border-radius: 5px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3); font-size: 12px;
-            max-height: 50vh; overflow-y: auto; width: 200px;
+            max-height: 60vh; overflow-y: auto; width: 210px;
         }
         .legend-title { font-weight: bold; margin-top: 5px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 3px; color:#333; }
         .legend-item { display: flex; align-items: center; margin-bottom: 4px; cursor: pointer; }
@@ -37,7 +37,6 @@
     <script>
         let map;
         let geocoder;
-        // 인포윈도우를 전역 변수 하나로 관리하여, 새 창이 열리면 기존 창이 닫히게 함
         let currentInfoWindow = null; 
         const geocodedStores = []; 
         
@@ -139,23 +138,51 @@
             {name: "청라매장", address: "인천 서구 연희동 797-1", jibu: "경인"}
         ];
 
-        // 2. 초록마을 매장 데이터
+        // 2. 초록마을 매장 데이터 (추가 요청 반영)
         const chorocStores = [
-            // 강남/서초/송파
+            // [사당/동작/관악 - 추가 및 보강]
+            {name: "초록마을 남성역점", address: "서울 동작구 사당로 247"}, // 사당시장 앞
+            {name: "초록마을 장승배기역점", address: "서울 동작구 상도로 179"}, // 장승배기
+            {name: "초록마을 현대시장점", address: "서울 관악구 양녕로 46"}, // 봉천동 현대시장
+            {name: "초록마을 이수역점", address: "서울 동작구 동작대로27길 15"},
+            {name: "초록마을 사당점", address: "서울 동작구 동작대로 137"},
+            {name: "초록마을 상도점", address: "서울 동작구 상도로 254"},
+            {name: "초록마을 흑석점", address: "서울 동작구 서달로 166"},
+            {name: "초록마을 신림점", address: "서울 관악구 신림로 366"},
+            {name: "초록마을 관악로점", address: "서울 관악구 관악로24길 38"},
+            {name: "초록마을 보라매점", address: "서울 영등포구 여의대방로 115"},
+
+            // [서초/강남 - 추가 및 보강]
+            {name: "초록마을 서래마을점", address: "서울 서초구 서래로 28"}, // 서래마을
+            {name: "초록마을 서초교대역점", address: "서울 서초구 서초중앙로 110"}, // 교대역
+            {name: "초록마을 우면점", address: "서울 서초구 태봉로 70"}, // 우면동
             {name: "초록마을 압구정점", address: "서울 강남구 압구정로29길 65"},
             {name: "초록마을 개포점", address: "서울 강남구 개포로82길 9-15"},
             {name: "초록마을 청담중앙점", address: "서울 강남구 학동로101길 26"},
             {name: "초록마을 대치점", address: "서울 강남구 선릉로 222"},
             {name: "초록마을 삼성점", address: "서울 강남구 삼성로 517"},
+            {name: "초록마을 도곡점", address: "서울 강남구 언주로30길 26"},
             {name: "초록마을 반포점", address: "서울 서초구 신반포로 177"}, 
             {name: "초록마을 서초점", address: "서울 서초구 서초중앙로 200"},
             {name: "초록마을 방배점", address: "서울 서초구 방배로 230"},
+            {name: "초록마을 서초그랑자이점", address: "서울 서초구 효령로 403"},
+
+            // [용산 - 동부이촌 확인]
+            {name: "초록마을 동부이촌점", address: "서울 용산구 이촌로65가길 72"},
+            {name: "초록마을 신용산점", address: "서울 용산구 서빙고로 17"},
+            {name: "초록마을 한남점", address: "서울 용산구 독서당로 73"},
+
+            // [송파/강동]
             {name: "초록마을 잠실리센츠점", address: "서울 송파구 올림픽로 145"},
             {name: "초록마을 올림픽공원점", address: "서울 송파구 양재대로 1222"},
             {name: "초록마을 헬리오시티점", address: "서울 송파구 송파대로 345"},
             {name: "초록마을 송파위례점", address: "서울 송파구 위례광장로 136"},
             {name: "초록마을 문정점", address: "서울 송파구 동남로 123"},
-            // 마포/서대문/은평
+            {name: "초록마을 고덕그라시움점", address: "서울 강동구 고덕로 333"},
+            {name: "초록마을 명일점", address: "서울 강동구 양재대로 1638"},
+            {name: "초록마을 둔촌점", address: "서울 강동구 명일로 172"},
+
+            // [마포/서대문/은평]
             {name: "초록마을 상암점", address: "서울 마포구 상암산로1길 73"},
             {name: "초록마을 마포염리점", address: "서울 마포구 숭문길 98"},
             {name: "초록마을 공덕점", address: "서울 마포구 백범로 152"},
@@ -164,10 +191,8 @@
             {name: "초록마을 은평점", address: "서울 은평구 진관2로 77"},
             {name: "초록마을 녹번역점", address: "서울 은평구 통일로 610"},
             {name: "초록마을 불광점", address: "서울 은평구 불광로 64"},
-            // 용산/종로/중구/성동
-            {name: "초록마을 신용산점", address: "서울 용산구 서빙고로 17"},
-            {name: "초록마을 동부이촌점", address: "서울 용산구 이촌로65가길 72"},
-            {name: "초록마을 한남점", address: "서울 용산구 독서당로 73"},
+
+            // [종로/중구/성동]
             {name: "초록마을 경희궁자이점", address: "서울 종로구 송월길 99"},
             {name: "초록마을 평창점", address: "서울 종로구 평창문화로 70"},
             {name: "초록마을 약수점", address: "서울 중구 다산로 115"},
@@ -175,7 +200,8 @@
             {name: "초록마을 왕십리점", address: "서울 성동구 왕십리로 339"},
             {name: "초록마을 성수점", address: "서울 성동구 성수일로 56"},
             {name: "초록마을 옥수점", address: "서울 성동구 독서당로 208"},
-            // 강서/양천/영등포/구로/동작/관악
+
+            // [강서/양천/영등포/구로]
             {name: "초록마을 목동롯데캐슬점", address: "서울 양천구 목동중앙북로 38"},
             {name: "초록마을 목동하이페리온점", address: "서울 양천구 오목로 300"},
             {name: "초록마을 신정점", address: "서울 양천구 신월로 338"},
@@ -183,13 +209,10 @@
             {name: "초록마을 여의도점", address: "서울 영등포구 국제금융로7길 22"},
             {name: "초록마을 문래점", address: "서울 영등포구 선유로 63"},
             {name: "초록마을 구로점", address: "서울 구로구 경인로 482"},
-            {name: "초록마을 상도점", address: "서울 동작구 상도로 254"},
-            {name: "초록마을 흑석점", address: "서울 동작구 서달로 166"},
-            {name: "초록마을 사당점", address: "서울 동작구 동작대로 137"},
-            {name: "초록마을 관악로점", address: "서울 관악구 관악로24길 38"},
             {name: "초록마을 강서점", address: "서울 강서구 강서로 351"},
             {name: "초록마을 염창점", address: "서울 강서구 양천로 694"},
-            // 노원/도봉/강북/성북/중랑/광진
+
+            // [노원/도봉/강북/성북/광진]
             {name: "초록마을 중계점", address: "서울 노원구 한글비석로 245"},
             {name: "초록마을 상계점", address: "서울 노원구 노원로 462"},
             {name: "초록마을 공릉점", address: "서울 노원구 공릉로 186"},
@@ -214,14 +237,13 @@
             "경인":   "http://maps.google.com/mapfiles/ms/icons/pink-dot.png"    // 청록
         };
         
-        // 초록마을 SVG 아이콘 (초록색 나무 모양)
+        // 초록마을 SVG 아이콘 (초록색 나무)
         const chorocIcon = {
             url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#008000" width="30px" height="30px"><path d="M12,2L2,12h3v8h6v-6h2v6h6v-8h3L12,2z"/></svg>'),
-            scaledSize: new google.maps.Size(30, 30), // 아이콘 크기
-            anchor: new google.maps.Point(15, 30)     // 아이콘 중심점 (아래 가운데)
+            scaledSize: new google.maps.Size(30, 30),
+            anchor: new google.maps.Point(15, 30)
         };
 
-        // 매장 개수 카운트 함수
         function countStores() {
             const counts = {
                 "남서울": 0, "북서울": 0, "서서울": 0, "동서울": 0, "경인": 0
@@ -233,7 +255,6 @@
 
             const chorocCount = chorocStores.length;
             
-            // 범례 HTML 생성
             const legendBox = document.getElementById('legend-box');
             legendBox.innerHTML = `
                 <div class="legend-title">한살림 (${hansalimStores.length}개)</div>
@@ -261,13 +282,10 @@
             });
             geocoder = new google.maps.Geocoder();
             
-            // 인포윈도우 초기화 (하나만 사용)
             currentInfoWindow = new google.maps.InfoWindow();
 
-            // 범례 개수 표시
             countStores();
 
-            // 한살림 -> 초록마을 순차 로딩
             processBatch(hansalimStores, "hansalim", 0);
         }
 
@@ -351,7 +369,6 @@
                         
                         content += `</div></div>`;
                         
-                        // 하나의 InfoWindow만 사용 (이전 창 자동 닫힘)
                         currentInfoWindow.setContent(content);
                         currentInfoWindow.open(map, marker);
                     });
@@ -360,7 +377,7 @@
                     console.error("Geocode error for " + store.name + ": " + status);
                 }
 
-                // API 호출 간격 조절
+                // API 호출 속도 조절
                 setTimeout(() => processBatch(list, type, index + 1), 70); 
             });
         }
