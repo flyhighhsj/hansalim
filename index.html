@@ -2,22 +2,54 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>서울 한살림 매장 지도</title>
     <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7qkdn3jcxx&submodules=geocoder"></script>
     <style>
-        #map { width: 100%; height: 800px; }
+        body, html { margin: 0; padding: 0; height: 100%; }
+        #map { width: 100%; height: 100%; }
+        
+        /* 내 위치 버튼 스타일 */
+        #myLocationBtn {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            z-index: 1000;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            color: #333;
+        }
+        #myLocationBtn:active {
+            background-color: #eee;
+        }
+        .info-box { padding: 10px; min-width: 150px; line-height: 1.5; font-size: 13px; }
     </style>
 </head>
 <body>
+    
     <div id="map"></div>
+    
+    <button id="myLocationBtn">🎯 내 위치 보기</button>
 
     <script>
+        // 1. 지도 초기화
         var map = new naver.maps.Map("map", {
             center: new naver.maps.LatLng(37.5665, 126.9780), // 서울 시청 중심
-            zoom: 11
+            zoom: 11,
+            scaleControl: false,
+            logoControl: false,
+            mapDataControl: false,
+            zoomControl: true,
+            minZoom: 6
         });
 
-        // 매장 데이터 (이름, 주소)
+        // 매장 데이터
         var stores = [
             {name: "개포매장", address: "서울 강남구 개포로 265"},
             {name: "대치매장", address: "서울 강남구 삼성로51길 11"},
@@ -62,15 +94,10 @@
             {name: "위례매장", address: "경기 성남시 수정구 위례동로 61"}
         ];
 
+        // 매장 마커 찍기
         stores.forEach(function(store) {
             naver.maps.Service.geocode({ query: store.address }, function(status, response) {
-                if (status === naver.maps.Service.Status.ERROR) {
-                    return console.log('Geocode Error: ' + store.name);
-                }
-                if (response.v2.meta.totalCount === 0) {
-                    return console.log('No result: ' + store.name);
-                }
-
+                if (status !== naver.maps.Service.Status.OK) return;
                 var item = response.v2.addresses[0];
                 var point = new naver.maps.Point(item.x, item.y);
 
@@ -81,18 +108,59 @@
                 });
 
                 var infoWindow = new naver.maps.InfoWindow({
-                    content: '<div style="padding:10px;"><b>' + store.name + '</b><br>' + store.address + '</div>'
+                    content: '<div class="info-box"><b>' + store.name + '</b><br>' + store.address + '</div>'
                 });
 
                 naver.maps.Event.addListener(marker, "click", function(e) {
-                    if (infoWindow.getMap()) {
-                        infoWindow.close();
-                    } else {
-                        infoWindow.open(map, marker);
-                    }
+                    if (infoWindow.getMap()) { infoWindow.close(); } 
+                    else { infoWindow.open(map, marker); }
                 });
             });
         });
+
+        // --- [추가된 기능] 내 위치 찾기 ---
+        var myLocationMarker = null; // 내 위치 마커 변수
+
+        document.getElementById("myLocationBtn").addEventListener("click", function() {
+            // 브라우저가 위치 정보를 지원하는지 확인
+            if (navigator.geolocation) {
+                // 위치 요청 (성공 시, 실패 시)
+                navigator.geolocation.getCurrentPosition(onSuccessGeolocation, onErrorGeolocation);
+            } else {
+                alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
+            }
+        });
+
+        function onSuccessGeolocation(position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            var location = new naver.maps.LatLng(lat, lng);
+
+            // 지도 중심을 내 위치로 이동
+            map.setCenter(location);
+            map.setZoom(14); // 조금 더 확대
+
+            // 기존 내 위치 마커가 있으면 제거 (중복 방지)
+            if (myLocationMarker) {
+                myLocationMarker.setMap(null);
+            }
+
+            // 내 위치에 빨간색 마커 표시
+            myLocationMarker = new naver.maps.Marker({
+                position: location,
+                map: map,
+                icon: {
+                    content: '<div style="background:red; width:14px; height:14px; border-radius:50%; border:2px solid white; box-shadow:0 0 5px black;"></div>',
+                    anchor: new naver.maps.Point(9, 9)
+                }
+            });
+            
+            alert("현재 위치로 이동했습니다!");
+        }
+
+        function onErrorGeolocation(error) {
+            alert("위치 정보를 가져올 수 없습니다. GPS 설정이나 권한을 확인해주세요.");
+        }
     </script>
 </body>
 </html>
