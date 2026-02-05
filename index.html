@@ -2,64 +2,50 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>서울 한살림 매장 지도</title>
-    
-    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=7qkdn3jcxx&submodules=geocoder"></script>
-    
+    <title>서울 한살림 매장 지도 (Google Maps)</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCd6QIRzWvsTTbfVUQkcqGyz-fXuQ4DTbU&libraries=geometry"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; }
+        html, body { margin: 0; padding: 0; height: 100%; font-family: 'Malgun Gothic', sans-serif;}
         #map { width: 100%; height: 100%; }
         
-        #myLocationBtn {
-            position: absolute;
-            bottom: 30px;
-            right: 20px;
-            z-index: 1000;
-            background-color: white;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px 15px;
-            font-size: 14px;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            cursor: pointer;
-            color: #333;
+        /* 로딩 상태바 스타일 */
+        #status-bar {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; background: rgba(255, 255, 255, 0.95);
+            padding: 10px 20px; border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-weight: bold; font-size: 14px;
         }
-        #myLocationBtn:active { background-color: #eee; }
-        .info-box { padding: 10px; min-width: 150px; line-height: 1.5; font-size: 13px; }
+
+        /* 범례 스타일 */
+        .legend {
+            position: absolute; bottom: 30px; right: 10px; z-index: 1000;
+            background: white; padding: 10px; border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3); font-size: 12px;
+        }
+        .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
+        .legend-icon { width: 20px; height: 20px; margin-right: 5px; }
     </style>
 </head>
 <body>
+    <div id="status-bar">지도 초기화 중...</div>
     
+    <div class="legend">
+        <div class="legend-item"><img src="http://maps.google.com/mapfiles/ms/icons/red-dot.png" class="legend-icon">강남 권역</div>
+        <div class="legend-item"><img src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png" class="legend-icon">강서 권역</div>
+        <div class="legend-item"><img src="http://maps.google.com/mapfiles/ms/icons/green-dot.png" class="legend-icon">강동 권역</div>
+        <div class="legend-item"><img src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png" class="legend-icon">강북 권역</div>
+    </div>
+
     <div id="map"></div>
-    <button id="myLocationBtn">🎯 내 위치 보기</button>
 
     <script>
-        // 0. 지도 API 로드 체크
-        if (typeof naver === "undefined" || !naver.maps) {
-            alert("지도가 로드되지 않았습니다.\n네이버 클라우드 콘솔에서 [Web 서비스 URL]에 Vercel 주소를 등록했는지 꼭 확인해주세요!");
-        }
-
-        var map = null;
-
-        try {
-            // 1. 지도 초기화
-            map = new naver.maps.Map("map", {
-                center: new naver.maps.LatLng(37.5665, 126.9780), // 서울 시청 중심
-                zoom: 11,
-                scaleControl: false,
-                logoControl: false,
-                mapDataControl: false,
-                zoomControl: true,
-                minZoom: 6
-            });
-        } catch (e) {
-            console.error("Map Init Error:", e);
-        }
-
+        let map;
+        let geocoder;
+        // 변환된 매장 정보를 담을 배열 (좌표 포함)
+        const geocodedStores = []; 
+        
         // 매장 데이터
-        var stores = [
+        const stores = [
             {name: "개포매장", address: "서울 강남구 개포로 265"},
             {name: "대치매장", address: "서울 강남구 삼성로51길 11"},
             {name: "압구정매장", address: "서울 강남구 압구정로 309"},
@@ -103,88 +89,115 @@
             {name: "위례매장", address: "경기 성남시 수정구 위례동로 61"}
         ];
 
-        // 매장 마커 찍기 (안전 처리 추가)
-        if (map) {
-            stores.forEach(function(store) {
-                if (!naver.maps.Service) return;
-                
-                naver.maps.Service.geocode({ query: store.address }, function(status, response) {
-                    if (status !== naver.maps.Service.Status.OK) return;
-                    try {
-                        var item = response.v2.addresses[0];
-                        var point = new naver.maps.Point(item.x, item.y);
-
-                        var marker = new naver.maps.Marker({
-                            position: point,
-                            map: map,
-                            title: store.name
-                        });
-
-                        var infoWindow = new naver.maps.InfoWindow({
-                            content: '<div class="info-box"><b>' + store.name + '</b><br>' + store.address + '</div>'
-                        });
-
-                        naver.maps.Event.addListener(marker, "click", function(e) {
-                            if (infoWindow.getMap()) { infoWindow.close(); } 
-                            else { infoWindow.open(map, marker); }
-                        });
-                    } catch (err) {
-                        console.log("마커 생성 중 오류: " + store.name);
-                    }
-                });
-            });
+        // 권역별 색상 아이콘 설정 (구글 기본 아이콘 활용)
+        function getRegionInfo(address) {
+            if (address.includes("강남구") || address.includes("서초구")) {
+                return { name: "강남", icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png" };
+            }
+            if (address.includes("강동구") || address.includes("송파구") || address.includes("성남시")) {
+                return { name: "강동", icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png" };
+            }
+            if (address.includes("강서구") || address.includes("양천구") || address.includes("구로구") || address.includes("금천구") || address.includes("영등포구") || address.includes("관악구") || address.includes("동작구")) {
+                return { name: "강서", icon: "http://maps.google.com/mapfiles/ms/icons/orange-dot.png" };
+            }
+            return { name: "강북", icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" };
         }
 
-        // --- 내 위치 찾기 ---
-        var myLocationMarker = null;
+        function initMap() {
+            // 지도 초기화
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 37.5665, lng: 126.9780 },
+                zoom: 11
+            });
+            geocoder = new google.maps.Geocoder();
 
-        document.getElementById("myLocationBtn").addEventListener("click", function() {
-            // 안전 장치: 지도가 없으면 중단
-            if (!map || !naver.maps) {
-                alert("지도가 로드되지 않았습니다. 새로고침 해주세요.");
+            // 순차적으로 주소 변환 시작
+            processNext(0);
+        }
+
+        function processNext(index) {
+            const statusBar = document.getElementById("status-bar");
+            
+            if (index >= stores.length) {
+                statusBar.style.display = "none";
                 return;
             }
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(onSuccessGeolocation, onErrorGeolocation);
-            } else {
-                alert("이 브라우저는 위치 정보를 지원하지 않습니다.");
-            }
-        });
+            const store = stores[index];
+            statusBar.innerText = `매장 위치 확인 중... (${index + 1}/${stores.length}) - ${store.name}`;
 
-        function onSuccessGeolocation(position) {
-            // naver.maps 객체 생존 확인
-            if (!naver.maps) {
-                alert("지도 API 로딩 중입니다. 잠시 후 다시 시도해주세요.");
-                return;
-            }
+            geocoder.geocode({ address: store.address }, (results, status) => {
+                if (status === "OK") {
+                    const location = results[0].geometry.location;
+                    const regionData = getRegionInfo(store.address);
+                    
+                    // 데이터 저장
+                    const storeData = {
+                        name: store.name,
+                        address: store.address,
+                        region: regionData.name,
+                        location: location, // google.maps.LatLng 객체
+                        marker: null
+                    };
 
-            var lat = position.coords.latitude;
-            var lng = position.coords.longitude;
-            var location = new naver.maps.LatLng(lat, lng);
+                    // 마커 생성
+                    const marker = new google.maps.Marker({
+                        map: map,
+                        position: location,
+                        title: store.name,
+                        icon: regionData.icon
+                    });
+                    
+                    storeData.marker = marker;
+                    geocodedStores.push(storeData);
 
-            map.setCenter(location);
-            map.setZoom(15);
+                    // 클릭 이벤트 (거리 계산)
+                    const infoWindow = new google.maps.InfoWindow();
+                    marker.addListener("click", () => {
+                        let content = `<div style="padding:5px; min-width:200px; color:black;">
+                                        <h3 style="margin:0 0 5px 0;">${store.name} <span style="font-size:12px; font-weight:normal;">(${regionData.name})</span></h3>
+                                        <div style="font-size:12px; color:#555; margin-bottom:8px;">${store.address}</div>
+                                        <hr style="border:0; border-top:1px solid #ddd; margin:5px 0;">
+                                        <strong>[${regionData.name} 권역 매장 거리]</strong><br>
+                                        <div style="max-height:100px; overflow-y:auto; font-size:11px; line-height:1.6;">`;
 
-            if (myLocationMarker) {
-                myLocationMarker.setMap(null);
-            }
+                        // 같은 권역 매장 필터링 및 거리 계산
+                        const neighbors = geocodedStores.filter(s => s.region === regionData.name && s.name !== store.name);
+                        
+                        if (neighbors.length > 0) {
+                            // 거리순 정렬을 위해 배열 복사 및 sort
+                            neighbors.sort((a, b) => {
+                                const distA = google.maps.geometry.spherical.computeDistanceBetween(location, a.location);
+                                const distB = google.maps.geometry.spherical.computeDistanceBetween(location, b.location);
+                                return distA - distB;
+                            });
 
-            myLocationMarker = new naver.maps.Marker({
-                position: location,
-                map: map,
-                icon: {
-                    content: '<div style="background:#ff3b3b; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>',
-                    anchor: new naver.maps.Point(11, 11)
+                            neighbors.forEach(neighbor => {
+                                // 미터(m) 단위를 킬로미터(km)로 변환
+                                const distanceMeters = google.maps.geometry.spherical.computeDistanceBetween(location, neighbor.location);
+                                const distanceKm = (distanceMeters / 1000).toFixed(2);
+                                content += `${neighbor.name}: <b>${distanceKm}km</b><br>`;
+                            });
+                        } else {
+                            content += "같은 권역의 다른 매장 정보를 불러오는 중입니다.<br>";
+                        }
+                        
+                        content += `</div></div>`;
+                        infoWindow.setContent(content);
+                        infoWindow.open(map, marker);
+                    });
+
+                } else {
+                    console.error("Geocode error for " + store.name + ": " + status);
+                    // 실패 시 잠시 대기 후 재시도 하거나 건너뛰기 (여기서는 건너뜀)
                 }
+
+                // 다음 매장 처리 (API 제한 고려하여 약간의 딜레이)
+                setTimeout(() => processNext(index + 1), 100); 
             });
         }
 
-        function onErrorGeolocation(error) {
-            var msg = "위치 정보를 가져올 수 없습니다.";
-            if (error.code == 1) msg += "\n(권한 거부됨: 위치 권한을 허용해주세요)";
-            alert(msg);
-        }
+        window.onload = initMap;
     </script>
 </body>
 </html>
