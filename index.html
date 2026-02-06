@@ -1,145 +1,45 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>한살림 지도</title>
 
-<title>한살림 & 초록마을 통합 지도</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
 
-<!-- NAVER MAP (geocoder 포함) -->
-<script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=woxpiyvz85&submodules=geocoder"></script>
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+  </style>
 
-<style>
-html,body{margin:0;height:100%;font-family:Pretendard,sans-serif}
-#map{width:100%;height:100%}
-
-#status-bar{
-position:absolute;top:15px;left:50%;
-transform:translateX(-50%);
-z-index:1000;
-background:white;
-padding:10px 20px;
-border-radius:25px;
-font-weight:700;
-border:2px solid #27ae60;
-box-shadow:0 4px 12px rgba(0,0,0,.15)
-}
-
-.legend{
-position:absolute;
-bottom:20px;
-left:10px;
-background:white;
-padding:12px;
-border-radius:12px;
-font-size:11px;
-width:160px;
-box-shadow:0 2px 10px rgba(0,0,0,.2)
-}
-
-.legend-item{
-display:flex;
-justify-content:space-between;
-margin:4px 0
-}
-
-.legend-dot{
-width:10px;height:10px;border-radius:50%;
-margin-right:6px;display:inline-block
-}
-</style>
+  <!-- ✅ async / defer 절대 넣지 말 것 -->
+  <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=woxpiyvz85&submodules=geocoder"></script>
 </head>
 
 <body>
 
-<div id="status-bar"></div>
-<div id="legend" class="legend"></div>
 <div id="map"></div>
 
 <script>
-window.onload=function(){
+  window.onload = function () {
 
-const stores=[
-{n:"한살림 미아",lat:37.6201,lng:127.0253,type:"hansalim",jibu:"북서울"},
-{n:"한살림 상계",lat:37.6599,lng:127.0718,type:"hansalim",jibu:"북서울"},
-{n:"한살림 대치",lat:37.4962,lng:127.0606,type:"hansalim",jibu:"남서울"},
-{n:"한살림 송파",lat:37.5028,lng:127.1168,type:"hansalim",jibu:"동서울"},
-{n:"한살림 목동",lat:37.5285,lng:126.8735,type:"hansalim",jibu:"서서울"},
+    const map = new naver.maps.Map('map', {
+      center: new naver.maps.LatLng(37.5665, 126.9780),
+      zoom: 11
+    });
 
-{n:"초록마을 압구정",lat:37.5298,lng:127.0289,type:"choroc"},
-{n:"초록마을 잠실",lat:37.5125,lng:127.0825,type:"choroc"},
-{n:"초록마을 공덕",lat:37.5432,lng:126.9531,type:"choroc"},
-{n:"초록마을 목동",lat:37.5352,lng:126.8762,type:"choroc"},
-{n:"초록마을 중계",lat:37.6512,lng:127.0762,type:"choroc"}
-];
+    // 테스트 마커
+    new naver.maps.Marker({
+      position: new naver.maps.LatLng(37.5665, 126.9780),
+      map: map
+    });
 
-const colors={
-"북서울":"#3498db",
-"남서울":"#e74c3c",
-"동서울":"#9b59b6",
-"서서울":"#f39c12"
-};
-
-const count={북서울:0,남서울:0,동서울:0,서서울:0,초록마을:0};
-
-const map=new naver.maps.Map("map",{
-center:new naver.maps.LatLng(37.5665,126.9780),
-zoom:11
-});
-
-stores.forEach(s=>{
-
-let html;
-
-if(s.type==="hansalim"){
-count[s.jibu]++;
-html=`<div style="width:14px;height:14px;background:${colors[s.jibu]};
-border-radius:50%;border:2px solid white"></div>`;
-}else{
-count["초록마을"]++;
-html=`<div style="background:#27ae60;color:white;padding:4px 6px;border-radius:6px;font-size:11px">초</div>`;
-}
-
-const marker=new naver.maps.Marker({
-position:new naver.maps.LatLng(s.lat,s.lng),
-map:map,
-icon:{content:html}
-});
-
-const info=new naver.maps.InfoWindow({
-content:`<div style="padding:8px;font-size:12px">
-<b>${s.n}</b><br>
-${s.type==="hansalim"?s.jibu:"초록마을"}
-</div>`
-});
-
-naver.maps.Event.addListener(marker,"click",()=>{
-info.open(map,marker);
-});
-
-});
-
-document.getElementById("status-bar").innerText=
-`한살림 ${stores.filter(x=>x.type==="hansalim").length} / 초록마을 ${count["초록마을"]}`;
-
-const legend=document.getElementById("legend");
-Object.keys(colors).forEach(k=>{
-if(count[k]>0){
-legend.innerHTML+=`
-<div class="legend-item">
-<span><span class="legend-dot" style="background:${colors[k]}"></span>${k}</span>
-<b>${count[k]}</b>
-</div>`;
-}
-});
-
-legend.innerHTML+=`
-<hr>
-<div class="legend-item">
-<span>초록마을</span><b>${count["초록마을"]}</b>
-</div>`;
-
-};
+  };
 </script>
 
 </body>
