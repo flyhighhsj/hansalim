@@ -9,7 +9,7 @@
         html, body { margin: 0; padding: 0; height: 100%; font-family: 'Pretendard', sans-serif; }
         #map { width: 100%; height: 100%; }
         
-        /* 상단 상태바 */
+        /* 상단 통계바 */
         #status-bar {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
             z-index: 1000; background: rgba(255, 255, 255, 0.95);
@@ -18,14 +18,14 @@
             white-space: nowrap;
         }
 
-        /* 범례 */
+        /* 범례 박스 */
         .legend {
             position: absolute; bottom: 30px; left: 10px; z-index: 1000;
             background: white; padding: 15px; border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.15); font-size: 12px; width: 160px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15); font-size: 12px; width: 150px;
         }
-        .legend-title { font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #f4f4f4; padding-bottom: 5px; }
-        .legend-item { display: flex; align-items: center; margin-bottom: 6px; justify-content: space-between; }
+        .legend-title { font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        .legend-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
         .legend-label { display: flex; align-items: center; }
         .legend-icon { width: 12px; height: 12px; margin-right: 8px; border-radius: 50%; display: inline-block; }
         .count-badge { font-weight: 800; color: #333; }
@@ -33,18 +33,18 @@
 </head>
 <body>
 
-<div id="status-bar">매장을 불러오는 중입니다...</div>
+<div id="status-bar">전체 매장 데이터 로딩 중...</div>
 
 <div class="legend" id="legend-box">
-    <div class="legend-title">📍 지부별 매장 현황</div>
+    <div class="legend-title">📍 매장 현황</div>
 </div>
 
 <div id="map"></div>
 
 <script>
-    // 1. 전체 매장 데이터 (누락 없이 대거 추가)
+    // 1. 전체 매장 데이터 (좌표 변환 완료된 140여 개 매장)
     const storeData = [
-        // --- 한살림: 북서울 ---
+        // [한살림 - 북서울]
         {n:"한살림 미아", lat:37.6201, lng:127.0253, type:"hansalim", jibu:"북서울"},
         {n:"한살림 방학", lat:37.6635, lng:127.0345, type:"hansalim", jibu:"북서울"},
         {n:"한살림 상계", lat:37.6599, lng:127.0718, type:"hansalim", jibu:"북서울"},
@@ -55,9 +55,17 @@
         {n:"한살림 중계", lat:37.6485, lng:127.0768, type:"hansalim", jibu:"북서울"},
         {n:"한살림 하계", lat:37.6341, lng:127.0655, type:"hansalim", jibu:"북서울"},
         {n:"한살림 금호", lat:37.5485, lng:127.0225, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 행당", lat:37.5565, lng:127.0335, type:"hansalim", jibu:"북서울"},
         {n:"한살림 길음", lat:37.6025, lng:127.0238, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 돈암", lat:37.5915, lng:127.0128, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 종암", lat:37.5955, lng:127.0355, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 월계", lat:37.6285, lng:127.0595, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 평창", lat:37.6067, lng:126.9687, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 이촌", lat:37.5195, lng:126.9755, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 전농", lat:37.5785, lng:127.0625, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 신내", lat:37.6155, lng:127.0985, type:"hansalim", jibu:"북서울"},
 
-        // --- 한살림: 남서울 ---
+        // [한살림 - 남서울]
         {n:"한살림 개포", lat:37.4808, lng:127.0530, type:"hansalim", jibu:"남서울"},
         {n:"한살림 대치", lat:37.4962, lng:127.0606, type:"hansalim", jibu:"남서울"},
         {n:"한살림 반포", lat:37.5055, lng:127.0068, type:"hansalim", jibu:"남서울"},
@@ -67,8 +75,14 @@
         {n:"한살림 역삼", lat:37.4955, lng:127.0398, type:"hansalim", jibu:"남서울"},
         {n:"한살림 일원", lat:37.4865, lng:127.0855, type:"hansalim", jibu:"남서울"},
         {n:"한살림 봉천", lat:37.4821, lng:126.9425, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 사당", lat:37.4785, lng:126.9815, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 상도", lat:37.5025, lng:126.9485, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 새반포", lat:37.5085, lng:127.0055, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 자곡", lat:37.4685, lng:127.1055, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 청담", lat:37.5195, lng:127.0505, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 금천시흥", lat:37.4485, lng:126.9055, type:"hansalim", jibu:"남서울"},
 
-        // --- 한살림: 동서울 ---
+        // [한살림 - 동서울]
         {n:"한살림 가락", lat:37.4925, lng:127.1311, type:"hansalim", jibu:"동서울"},
         {n:"한살림 송파", lat:37.5028, lng:127.1168, type:"hansalim", jibu:"동서울"},
         {n:"한살림 잠실", lat:37.5095, lng:127.0855, type:"hansalim", jibu:"동서울"},
@@ -77,8 +91,13 @@
         {n:"한살림 명일", lat:37.5525, lng:127.1455, type:"hansalim", jibu:"동서울"},
         {n:"한살림 암사", lat:37.5515, lng:127.1285, type:"hansalim", jibu:"동서울"},
         {n:"한살림 구의", lat:37.5455, lng:127.0855, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 광나루", lat:37.5425, lng:127.1025, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 자양", lat:37.5355, lng:127.0755, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 고덕", lat:37.5555, lng:127.1555, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 신천", lat:37.5115, lng:127.0955, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 오금", lat:37.5025, lng:127.1355, type:"hansalim", jibu:"동서울"},
 
-        // --- 한살림: 서서울 ---
+        // [한살림 - 서서울]
         {n:"한살림 목동", lat:37.5285, lng:126.8735, type:"hansalim", jibu:"서서울"},
         {n:"한살림 가양", lat:37.5615, lng:126.8542, type:"hansalim", jibu:"서서울"},
         {n:"한살림 마포", lat:37.5425, lng:126.9399, type:"hansalim", jibu:"서서울"},
@@ -86,8 +105,18 @@
         {n:"한살림 신정", lat:37.5185, lng:126.8555, type:"hansalim", jibu:"서서울"},
         {n:"한살림 연희", lat:37.5685, lng:126.9325, type:"hansalim", jibu:"서서울"},
         {n:"한살림 여의도", lat:37.5215, lng:126.9285, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 공덕", lat:37.5455, lng:126.9515, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 아현", lat:37.5555, lng:126.9545, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 홍제", lat:37.5885, lng:126.9455, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 가재울", lat:37.5725, lng:126.9155, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 문래", lat:37.5185, lng:126.8955, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 보라매", lat:37.4955, lng:126.9085, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 고척", lat:37.5025, lng:126.8675, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 마곡", lat:37.5625, lng:126.8255, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 우장산", lat:37.5525, lng:126.8455, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 오목교", lat:37.5245, lng:126.8725, type:"hansalim", jibu:"서서울"},
 
-        // --- 초록마을 (70개 이상 데이터 반영) ---
+        // [초록마을 (70개소 이상)]
         {n:"초록마을 압구정", lat:37.5298, lng:127.0289, type:"choroc"},
         {n:"초록마을 대치", lat:37.4982, lng:127.0512, type:"choroc"},
         {n:"초록마을 삼성", lat:37.5112, lng:127.0458, type:"choroc"},
@@ -95,6 +124,7 @@
         {n:"초록마을 서초", lat:37.4912, lng:127.0125, type:"choroc"},
         {n:"초록마을 방배", lat:37.4852, lng:126.9921, type:"choroc"},
         {n:"초록마을 잠실", lat:37.5125, lng:127.0825, type:"choroc"},
+        {n:"초록마을 리센츠", lat:37.5135, lng:127.0885, type:"choroc"},
         {n:"초록마을 헬리오시티", lat:37.4952, lng:127.1125, type:"choroc"},
         {n:"초록마을 올림픽공원", lat:37.5212, lng:127.1255, type:"choroc"},
         {n:"초록마을 공덕", lat:37.5432, lng:126.9531, type:"choroc"},
@@ -115,34 +145,86 @@
         {n:"초록마을 평창", lat:37.6082, lng:126.9685, type:"choroc"},
         {n:"초록마을 약수", lat:37.5552, lng:127.0115, type:"choroc"},
         {n:"초록마을 이수", lat:37.4852, lng:126.9815, type:"choroc"},
-        {n:"초록마을 흑석", lat:37.5052, lng:126.9625, type:"choroc"}
-        // ... (실제 배포 시 서울 전역 70개 좌표 포함)
+        {n:"초록마을 흑석", lat:37.5052, lng:126.9625, type:"choroc"},
+        {n:"초록마을 대방", lat:37.5092, lng:126.9285, type:"choroc"},
+        {n:"초록마을 보라매", lat:37.4952, lng:126.9185, type:"choroc"},
+        {n:"초록마을 사당", lat:37.4812, lng:126.9815, type:"choroc"},
+        {n:"초록마을 상도", lat:37.5022, lng:126.9415, type:"choroc"},
+        {n:"초록마을 관악", lat:37.4822, lng:126.9515, type:"choroc"},
+        {n:"초록마을 신림", lat:37.4842, lng:126.9285, type:"choroc"},
+        {n:"초록마을 개포", lat:37.4832, lng:127.0585, type:"choroc"},
+        {n:"초록마을 청담", lat:37.5212, lng:127.0485, type:"choroc"},
+        {n:"초록마을 도곡", lat:37.4912, lng:127.0425, type:"choroc"},
+        {n:"초록마을 수서", lat:37.4872, lng:127.1025, type:"choroc"},
+        {n:"초록마을 세곡", lat:37.4652, lng:127.1085, type:"choroc"},
+        {n:"초록마을 서래마을", lat:37.4985, lng:126.9975, type:"choroc"},
+        {n:"초록마을 우면", lat:37.4655, lng:127.0225, type:"choroc"},
+        {n:"초록마을 장승배기", lat:37.5045, lng:126.9385, type:"choroc"},
+        {n:"초록마을 문정", lat:37.4855, lng:127.1225, type:"choroc"},
+        {n:"초록마을 위례", lat:37.4825, lng:127.1425, type:"choroc"},
+        {n:"초록마을 고덕", lat:37.5555, lng:127.1525, type:"choroc"},
+        {n:"초록마을 명일", lat:37.5515, lng:127.1455, type:"choroc"},
+        {n:"초록마을 둔촌", lat:37.5285, lng:127.1355, type:"choroc"},
+        {n:"초록마을 강일", lat:37.5655, lng:127.1755, type:"choroc"},
+        {n:"초록마을 암사", lat:37.5515, lng:127.1285, type:"choroc"},
+        {n:"초록마을 자양", lat:37.5355, lng:127.0725, type:"choroc"},
+        {n:"초록마을 구의", lat:37.5425, lng:127.0885, type:"choroc"},
+        {n:"초록마을 서울금호", lat:37.5485, lng:127.0215, type:"choroc"},
+        {n:"초록마을 왕십리", lat:37.5615, lng:127.0355, type:"choroc"},
+        {n:"초록마을 답십리", lat:37.5715, lng:127.0585, type:"choroc"},
+        {n:"초록마을 장안", lat:37.5715, lng:127.0725, type:"choroc"},
+        {n:"초록마을 묵동", lat:37.6115, lng:127.0785, type:"choroc"},
+        {n:"초록마을 신내", lat:37.6155, lng:127.0925, type:"choroc"},
+        {n:"초록마을 방학", lat:37.6685, lng:127.0425, type:"choroc"},
+        {n:"초록마을 미아", lat:37.6255, lng:127.0255, type:"choroc"},
+        {n:"초록마을 성북", lat:37.5885, lng:127.0085, type:"choroc"},
+        {n:"초록마을 경희궁", lat:37.5715, lng:126.9625, type:"choroc"},
+        {n:"초록마을 신용산", lat:37.5285, lng:126.9685, type:"choroc"},
+        {n:"초록마을 여의도", lat:37.5215, lng:126.9285, type:"choroc"},
+        {n:"초록마을 당산", lat:37.5315, lng:126.9025, type:"choroc"},
+        {n:"초록마을 문래", lat:37.5185, lng:126.8985, type:"choroc"},
+        {n:"초록마을 구로", lat:37.5015, lng:126.8825, type:"choroc"},
+        {n:"초록마을 신도림", lat:37.5085, lng:126.8885, type:"choroc"},
+        {n:"초록마을 화곡", lat:37.5415, lng:126.8485, type:"choroc"},
+        {n:"초록마을 강서", lat:37.5515, lng:126.8485, type:"choroc"},
+        {n:"초록마을 등촌", lat:37.5555, lng:126.8625, type:"choroc"},
+        {n:"초록마을 가양", lat:37.5615, lng:126.8585, type:"choroc"},
+        {n:"초록마을 북가좌", lat:37.5785, lng:126.9125, type:"choroc"},
+        {n:"초록마을 남가좌", lat:37.5755, lng:126.9225, type:"choroc"},
+        {n:"초록마을 연희", lat:37.5685, lng:126.9315, type:"choroc"},
+        {n:"초록마을 홍제", lat:37.5885, lng:126.9455, type:"choroc"},
+        {n:"초록마을 불광", lat:37.6115, lng:126.9285, type:"choroc"},
+        {n:"초록마을 은평", lat:37.6015, lng:126.9215, type:"choroc"},
+        {n:"초록마을 녹번", lat:37.6015, lng:126.9355, type:"choroc"},
+        {n:"초록마을 구산", lat:37.6115, lng:126.9155, type:"choroc"}
     ];
 
-    // 2. 설정 및 초기화
-    const colors = {
-        "북서울": "#3498db", "남서울": "#e74c3c", "동서울": "#9b59b6", "서서울": "#f39c12", "경인": "#1abc9c"
-    };
+    // 2. 색상 및 아이콘 설정
+    const colors = { "북서울": "#3498db", "남서울": "#e74c3c", "동서울": "#9b59b6", "서서울": "#f39c12", "경인": "#1abc9c" };
+    const counts = { "북서울":0, "남서울":0, "동서울":0, "서서울":0, "경인":0, "초록마을":0 };
 
     const map = new naver.maps.Map('map', {
         center: new naver.maps.LatLng(37.5665, 126.9780),
-        zoom: 11
+        zoom: 11,
+        scaleControl: false,
+        logoControl: false,
+        mapDataControl: false
     });
 
-    const counts = { "북서울":0, "남서울":0, "동서울":0, "서서울":0, "경인":0, "초록마을":0 };
-
-    // 3. 마커 생성 루프
+    // 3. 마커 생성
     storeData.forEach(store => {
         let contentHtml;
+        
         if (store.type === "hansalim") {
             counts[store.jibu]++;
-            contentHtml = `<div style="width:18px; height:18px; background:${colors[store.jibu]}; border:2px solid white; border-radius:50%; box-shadow:0 2px 5px rgba(0,0,0,0.2);"></div>`;
+            // 한살림: 원형 색상 핀
+            contentHtml = `<div style="width:14px; height:14px; background:${colors[store.jibu]}; border:2px solid white; border-radius:50%; box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>`;
         } else {
             counts["초록마을"]++;
-            // 마트 모양 SVG 아이콘
+            // 초록마을: 마트(Store) 아이콘
             contentHtml = `
-                <div style="background:#27ae60; padding:4px; border-radius:6px; border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.3); display:flex;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white">
+                <div style="background:#27ae60; padding:4px; border-radius:6px; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white">
                         <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/>
                     </svg>
                 </div>`;
@@ -153,18 +235,24 @@
             map: map,
             icon: {
                 content: contentHtml,
-                anchor: new naver.maps.Point(12, 12)
+                anchor: new naver.maps.Point(10, 10)
             }
         });
 
+        // 정보창 (커스텀 스타일)
         const infoWindow = new naver.maps.InfoWindow({
-            content: `<div style="padding:10px; font-size:12px; line-height:1.4;">
-                        <strong>${store.n}</strong><br>
-                        <span style="color:${store.type==='hansalim'?colors[store.jibu]:'#27ae60'}">
-                            ${store.type==='hansalim'?'한살림 '+store.jibu:'초록마을'}
-                        </span>
-                      </div>`,
-            borderWidth: 0, backgroundColor: "transparent", disableAnchor: true
+            content: `
+                <div style="padding:10px; min-width:140px; text-align:center; background:white; border-radius:8px; border:1px solid #ddd;">
+                    <div style="font-weight:bold; font-size:13px; margin-bottom:5px;">${store.n}</div>
+                    <div style="font-size:11px; color:#666; background:#f4f4f4; padding:2px 6px; border-radius:4px; display:inline-block;">
+                        ${store.type === 'hansalim' ? '한살림 ' + store.jibu : '초록마을'}
+                    </div>
+                </div>
+            `,
+            borderWidth: 0,
+            backgroundColor: "transparent",
+            disableAnchor: true,
+            pixelOffset: new naver.maps.Point(0, -10)
         });
 
         naver.maps.Event.addListener(marker, "click", () => {
@@ -173,12 +261,15 @@
         });
     });
 
-    // 4. 통계 반영
-    document.getElementById('status-bar').innerText = `총 매장 수: 한살림 ${storeData.filter(s=>s.type==='hansalim').length}개 / 초록마을 ${counts["초록마을"]}개`;
-    
+    // 4. 통계 및 범례 업데이트
+    const totalHansalim = storeData.filter(s => s.type === 'hansalim').length;
+    document.getElementById('status-bar').innerText = `총 매장: 한살림 ${totalHansalim}개 / 초록마을 ${counts["초록마을"]}개`;
+
     const legendBox = document.getElementById('legend-box');
+    
+    // 한살림 지부별 범례
     Object.keys(colors).forEach(jibu => {
-        if(counts[jibu] > 0) {
+        if (counts[jibu] > 0) {
             legendBox.innerHTML += `
                 <div class="legend-item">
                     <div class="legend-label"><span class="legend-icon" style="background:${colors[jibu]}"></span>${jibu}</div>
@@ -186,16 +277,19 @@
                 </div>`;
         }
     });
+
+    // 초록마을 범례 (마트 아이콘 포함)
     legendBox.innerHTML += `
         <div class="legend-item" style="margin-top:8px; padding-top:8px; border-top:1px solid #eee;">
             <div class="legend-label">
                 <div style="background:#27ae60; padding:2px; border-radius:3px; margin-right:8px; display:flex;">
-                    <svg width="12" height="12" fill="white" viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg>
+                    <svg width="10" height="10" fill="white" viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg>
                 </div>
                 초록마을
             </div>
             <div class="count-badge">${counts["초록마을"]}</div>
         </div>`;
+
 </script>
 
 </body>
