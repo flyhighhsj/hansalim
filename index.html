@@ -12,17 +12,17 @@
             z-index: 1000; background: white; padding: 12px 25px; 
             border-radius: 30px; font-size: 14px; font-weight: 900;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid #27ae60;
-            white-space: nowrap; display: flex; gap: 15px;
+            white-space: nowrap; display: flex; gap: 15px; align-items: center;
         }
         .legend {
             position: absolute; bottom: 30px; left: 10px; z-index: 1000;
-            background: white; padding: 15px; border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px;
             box-shadow: 0 2px 15px rgba(0,0,0,0.2); font-size: 11px; width: 170px;
         }
         .legend-title { font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
         .legend-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
         .legend-icon { width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; display: inline-block; }
-        .info-card { min-width: 240px; max-height: 250px; overflow-y: auto; }
+        .info-card { min-width: 220px; max-height: 250px; overflow-y: auto; }
         .nearby-item { font-size: 12px; padding: 4px 0; border-bottom: 1px solid #f4f4f4; display: flex; justify-content: space-between; }
     </style>
 </head>
@@ -36,9 +36,11 @@
 
 <script>
     const storeData = [
-        // --- [한살림: 북서울지부 29개] ---
-        {n:"한살림 미아", lat:37.6200, lng:127.0128, type:"hansalim", jibu:"북서울"},
-        {n:"한살림 수유", lat:37.6380, lng:127.0250, type:"hansalim", jibu:"북서울"},
+        // ================= [한살림: 104개] =================
+        
+        // --- [북서울지부: 29개] ---
+        {n:"한살림 미아", lat:37.6201, lng:127.0253, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 수유", lat:37.6365, lng:127.0185, type:"hansalim", jibu:"북서울"},
         {n:"한살림 방학", lat:37.6635, lng:127.0345, type:"hansalim", jibu:"북서울"},
         {n:"한살림 창동", lat:37.6531, lng:127.0505, type:"hansalim", jibu:"북서울"},
         {n:"한살림 쌍문", lat:37.6534, lng:127.0371, type:"hansalim", jibu:"북서울"},
@@ -53,7 +55,7 @@
         {n:"한살림 종암", lat:37.5955, lng:127.0355, type:"hansalim", jibu:"북서울"},
         {n:"한살림 보문", lat:37.5855, lng:127.0205, type:"hansalim", jibu:"북서울"},
         {n:"한살림 정릉", lat:37.6035, lng:127.0055, type:"hansalim", jibu:"북서울"},
-        {n:"한살림 광화문", lat:37.5680, lng:126.9656, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 광화문", lat:37.5704, lng:126.9698, type:"hansalim", jibu:"북서울"},
         {n:"한살림 평창", lat:37.6067, lng:126.9687, type:"hansalim", jibu:"북서울"},
         {n:"한살림 혜화", lat:37.5855, lng:127.0015, type:"hansalim", jibu:"북서울"},
         {n:"한살림 경희궁", lat:37.5715, lng:126.9625, type:"hansalim", jibu:"북서울"},
@@ -67,8 +69,8 @@
         {n:"한살림 신내", lat:37.6155, lng:127.0985, type:"hansalim", jibu:"북서울"},
         {n:"한살림 묵동", lat:37.6125, lng:127.0785, type:"hansalim", jibu:"북서울"},
 
-        // --- [한살림: 남서울지부 25개] ---
-        {n:"한살림 개포", lat:37.4809, lng:127.0531, type:"hansalim", jibu:"남서울"},
+        // --- [남서울지부: 25개] ---
+        {n:"한살림 개포", lat:37.4808, lng:127.0530, type:"hansalim", jibu:"남서울"},
         {n:"한살림 대치", lat:37.4962, lng:127.0606, type:"hansalim", jibu:"남서울"},
         {n:"한살림 도곡", lat:37.4892, lng:127.0456, type:"hansalim", jibu:"남서울"},
         {n:"한살림 압구정", lat:37.5284, lng:127.0375, type:"hansalim", jibu:"남서울"},
@@ -94,8 +96,8 @@
         {n:"한살림 금천시흥", lat:37.4485, lng:126.9055, type:"hansalim", jibu:"남서울"},
         {n:"한살림 독산", lat:37.4655, lng:126.8955, type:"hansalim", jibu:"남서울"},
 
-        // --- [한살림: 동서울지부 22개] ---
-        {n:"한살림 광장", lat:37.5407, lng:127.0947, type:"hansalim", jibu:"동서울"},
+        // --- [동서울지부: 22개] (광나루, 구의 포함) ---
+        {n:"한살림 광나루", lat:37.5452, lng:127.1033, type:"hansalim", jibu:"동서울"}, // 광장동 소재
         {n:"한살림 구의", lat:37.5422, lng:127.0865, type:"hansalim", jibu:"동서울"},
         {n:"한살림 자양", lat:37.5355, lng:127.0755, type:"hansalim", jibu:"동서울"},
         {n:"한살림 중곡", lat:37.5655, lng:127.0855, type:"hansalim", jibu:"동서울"},
@@ -104,8 +106,8 @@
         {n:"한살림 송파", lat:37.5028, lng:127.1168, type:"hansalim", jibu:"동서울"},
         {n:"한살림 방이", lat:37.5115, lng:127.1205, type:"hansalim", jibu:"동서울"},
         {n:"한살림 오금", lat:37.5025, lng:127.1355, type:"hansalim", jibu:"동서울"},
-        {n:"한살림 잠실", lat:37.5110, lng:127.0862, type:"hansalim", jibu:"동서울"},
-        {n:"한살림 신천", lat:37.5110, lng:127.0862, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 잠실", lat:37.5095, lng:127.0855, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 신천", lat:37.5115, lng:127.0955, type:"hansalim", jibu:"동서울"},
         {n:"한살림 풍납", lat:37.5335, lng:127.1185, type:"hansalim", jibu:"동서울"},
         {n:"한살림 위례", lat:37.4815, lng:127.1435, type:"hansalim", jibu:"동서울"},
         {n:"한살림 장지", lat:37.4785, lng:127.1255, type:"hansalim", jibu:"동서울"},
@@ -118,7 +120,7 @@
         {n:"한살림 성내", lat:37.5285, lng:127.1255, type:"hansalim", jibu:"동서울"},
         {n:"한살림 천호", lat:37.5405, lng:127.1255, type:"hansalim", jibu:"동서울"},
 
-        // --- [한살림: 서서울지부 28개] ---
+        // --- [서서울지부: 28개] ---
         {n:"한살림 목동", lat:37.5285, lng:126.8735, type:"hansalim", jibu:"서서울"},
         {n:"한살림 신정", lat:37.5185, lng:126.8555, type:"hansalim", jibu:"서서울"},
         {n:"한살림 오목교", lat:37.5245, lng:126.8725, type:"hansalim", jibu:"서서울"},
@@ -148,11 +150,11 @@
         {n:"한살림 고척", lat:37.5025, lng:126.8675, type:"hansalim", jibu:"서서울"},
         {n:"한살림 천왕", lat:37.4825, lng:126.8385, type:"hansalim", jibu:"서서울"},
 
-        // --- [초록마을: 서울 73개] ---
-        {n:"초록마을 광장점", lat:37.5407, lng:127.0947, type:"choroc"},
+        // ================= [초록마을: 73개] =================
+        {n:"초록마을 광장점", lat:37.5435, lng:127.1025, type:"choroc"},
         {n:"초록마을 현대시장점", lat:37.4879, lng:126.9424, type:"choroc"},
-        {n:"초록마을 대치점", lat:37.4991, lng:127.0630, type:"choroc"},
-        {n:"초록마을 삼성점", lat:37.5149, lng:127.0475, type:"choroc"},
+        {n:"초록마을 대치점", lat:37.4982, lng:127.0512, type:"choroc"},
+        {n:"초록마을 삼성점", lat:37.5112, lng:127.0458, type:"choroc"},
         {n:"초록마을 압구정점", lat:37.5298, lng:127.0289, type:"choroc"},
         {n:"초록마을 반포점", lat:37.5041, lng:127.0019, type:"choroc"},
         {n:"초록마을 서초점", lat:37.4912, lng:127.0125, type:"choroc"},
@@ -177,6 +179,7 @@
         {n:"초록마을 성수점", lat:37.5412, lng:127.0502, type:"choroc"},
         {n:"초록마을 서울금호점", lat:37.5522, lng:127.0219, type:"choroc"},
         {n:"초록마을 옥수점", lat:37.5415, lng:127.0175, type:"choroc"},
+        {n:"초록마을 광장점", lat:37.5452, lng:127.1025, type:"choroc"},
         {n:"초록마을 한남점", lat:37.5312, lng:127.0085, type:"choroc"},
         {n:"초록마을 동부이촌점", lat:37.5182, lng:126.9725, type:"choroc"},
         {n:"초록마을 평창점", lat:37.6082, lng:126.9685, type:"choroc"},
@@ -197,7 +200,7 @@
         {n:"초록마을 도곡점", lat:37.4912, lng:127.0425, type:"choroc"},
         {n:"초록마을 수서점", lat:37.4872, lng:127.1025, type:"choroc"},
         {n:"초록마을 세곡점", lat:37.4652, lng:127.1085, type:"choroc"},
-        {n:"초록마을 서래마을점", lat:37.4962, lng:126.9983, type:"choroc"},
+        {n:"초록마을 서래마을점", lat:37.4985, lng:126.9975, type:"choroc"},
         {n:"초록마을 우면점", lat:37.4655, lng:127.0225, type:"choroc"},
         {n:"초록마을 장승배기점", lat:37.5045, lng:126.9385, type:"choroc"},
         {n:"초록마을 문정점", lat:37.4855, lng:127.1225, type:"choroc"},
@@ -221,7 +224,9 @@
         {n:"초록마을 불광점", lat:37.6115, lng:126.9285, type:"choroc"},
         {n:"초록마을 은평점", lat:37.6015, lng:126.9215, type:"choroc"},
         {n:"초록마을 녹번점", lat:37.6015, lng:126.9355, type:"choroc"},
-        {n:"초록마을 구산점", lat:37.6115, lng:126.9155, type:"choroc"}
+        {n:"초록마을 구산점", lat:37.6115, lng:126.9155, type:"choroc"},
+        {n:"초록마을 자양점", lat:37.5315, lng:127.0725, type:"choroc"},
+        {n:"초록마을 구의점", lat:37.5385, lng:127.0825, type:"choroc"}
     ];
 
     const colors = { "북서울": "#3498db", "남서울": "#e74c3c", "동서울": "#9b59b6", "서서울": "#f39c12" };
@@ -253,6 +258,7 @@
             if(store.type === "hansalim") counts[store.jibu]++; else counts["초록마을"]++;
 
             let icon;
+            // 핀 종류를 'type' 기준으로 엄격히 구분 (한살림=원형, 초록마을=마커)
             if (store.type === "hansalim") {
                 icon = { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: colors[store.jibu], fillOpacity: 1, strokeColor: "white", strokeWeight: 2 };
             } else {
