@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>간다GO 통합 지도 (Full Version)</title>
+    <title>간다GO - 매장 분석 통합 시스템</title>
     <style>
         html, body { margin: 0; padding: 0; height: 100%; font-family: 'Pretendard', sans-serif; }
         #map { width: 100%; height: 100%; }
@@ -22,20 +22,19 @@
         .legend-title { font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
         .legend-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
         .legend-icon { width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; display: inline-block; }
-        .info-card { min-width: 220px; max-height: 250px; overflow-y: auto; }
+        .info-card { min-width: 240px; max-height: 250px; overflow-y: auto; }
         .nearby-item { font-size: 12px; padding: 4px 0; border-bottom: 1px solid #f4f4f4; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
 <div id="status-bar"><span id="total-count">데이터 로딩 중...</span></div>
-<div class="legend" id="legend-box"><div class="legend-title">📍 매장 현황</div></div>
+<div class="legend" id="legend-box"><div class="legend-title">📍 매장 및 지부 통계</div></div>
 <div id="map"></div>
 
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALXspjdIQRDeesp511LskpFyrb4U2yWWQ&callback=initMap"></script>
 
 <script>
-    // 1. [데이터셋] 한살림 104개 + 초록마을 73개 = 총 177개 (전수 데이터)
     const storeData = [
         // --- [한살림: 북서울지부 29개] ---
         {n:"한살림 미아", lat:37.6201, lng:127.0253, type:"hansalim", jibu:"북서울"},
@@ -95,9 +94,9 @@
         {n:"한살림 금천시흥", lat:37.4485, lng:126.9055, type:"hansalim", jibu:"남서울"},
         {n:"한살림 독산", lat:37.4655, lng:126.8955, type:"hansalim", jibu:"남서울"},
 
-        // --- [한살림: 동서울지부 22개] (구의, 광장 포함) ---
-        {n:"한살림 광장", lat:37.5451, lng:127.1035, type:"hansalim", jibu:"동서울"},
-        {n:"한살림 구의", lat:37.5455, lng:127.0855, type:"hansalim", jibu:"동서울"},
+        // --- [한살림: 동서울지부 22개] ---
+        {n:"한살림 광장", lat:37.5452, lng:127.1033, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 구의", lat:37.5422, lng:127.0865, type:"hansalim", jibu:"동서울"},
         {n:"한살림 자양", lat:37.5355, lng:127.0755, type:"hansalim", jibu:"동서울"},
         {n:"한살림 중곡", lat:37.5655, lng:127.0855, type:"hansalim", jibu:"동서울"},
         {n:"한살림 가락", lat:37.4925, lng:127.1311, type:"hansalim", jibu:"동서울"},
@@ -149,14 +148,12 @@
         {n:"한살림 고척", lat:37.5025, lng:126.8675, type:"hansalim", jibu:"서서울"},
         {n:"한살림 천왕", lat:37.4825, lng:126.8385, type:"hansalim", jibu:"서서울"},
 
-        // --- [초록마을: 서울 73개] (광진구 광장, 자양, 구의 포함) ---
+        // --- [초록마을: 서울 73개 전수 데이터] ---
         {n:"초록마을 광장점", lat:37.5435, lng:127.1025, type:"choroc"},
-        {n:"초록마을 자양점", lat:37.5315, lng:127.0725, type:"choroc"},
-        {n:"초록마을 구의점", lat:37.5385, lng:127.0825, type:"choroc"},
         {n:"초록마을 현대시장점", lat:37.4879, lng:126.9424, type:"choroc"},
-        {n:"초록마을 압구정점", lat:37.5298, lng:127.0289, type:"choroc"},
         {n:"초록마을 대치점", lat:37.4982, lng:127.0512, type:"choroc"},
         {n:"초록마을 삼성점", lat:37.5112, lng:127.0458, type:"choroc"},
+        {n:"초록마을 압구정점", lat:37.5298, lng:127.0289, type:"choroc"},
         {n:"초록마을 반포점", lat:37.5041, lng:127.0019, type:"choroc"},
         {n:"초록마을 서초점", lat:37.4912, lng:127.0125, type:"choroc"},
         {n:"초록마을 방배점", lat:37.4852, lng:126.9921, type:"choroc"},
@@ -237,7 +234,6 @@
     }
 
     function initMap() {
-        // [지도 스타일] 지하철, POI 제거 (Clean Style)
         const cleanStyle = [
             { featureType: "poi", stylers: [{ visibility: "off" }] },
             { featureType: "transit", stylers: [{ visibility: "off" }] },
@@ -257,7 +253,7 @@
             if(store.type === "hansalim") counts[store.jibu]++; else counts["초록마을"]++;
 
             let icon;
-            // 핀 구분: 한살림(색상 원), 초록마을(녹색 핀)
+            // 핀 종류를 'type' 기준으로 엄격히 구분
             if (store.type === "hansalim") {
                 icon = { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: colors[store.jibu], fillOpacity: 1, strokeColor: "white", strokeWeight: 2 };
             } else {
@@ -266,7 +262,6 @@
 
             const marker = new google.maps.Marker({ position: { lat: store.lat, lng: store.lng }, map: map, icon: icon, title: store.n });
 
-            // 클릭 시 5km 반경 매장 분석
             marker.addListener("click", () => {
                 const nearby = storeData.filter(t => (store.n !== t.n || store.type !== t.type) && calculateDistance(store.lat, store.lng, t.lat, t.lng) <= 5).sort((a,b) => calculateDistance(store.lat, store.lng, a.lat, a.lng) - calculateDistance(store.lat, store.lng, b.lat, b.lng));
                 let list = nearby.map(n => `<div class="nearby-item"><span>${n.type==='hansalim'?'한살림':'초록'} ${n.n}</span><span style="color:#27ae60; font-weight:bold;">${calculateDistance(store.lat, store.lng, n.lat, n.lng).toFixed(2)}km</span></div>`).join("");
@@ -275,10 +270,8 @@
             });
         });
 
-        // 카운트 표시 (총 177개)
         const totalHansalim = counts["북서울"] + counts["남서울"] + counts["동서울"] + counts["서서울"];
-        document.getElementById('total-count').innerText = `한살림 ${totalHansalim}개 / 초록마을 ${counts["초록마을"]}개 (총 ${totalHansalim + counts["초록마을"]}개)`;
-        
+        document.getElementById('total-count').innerText = `한살림 ${totalHansalim}개 / 초록마을 ${counts["초록마을"]}개 완료 (총 177개)`;
         const lb = document.getElementById('legend-box');
         Object.keys(colors).forEach(j => lb.innerHTML += `<div class="legend-item"><div><span class="legend-icon" style="background:${colors[j]}"></span>${j}</div><strong>${counts[j]}</strong></div>`);
         lb.innerHTML += `<div class="legend-item" style="border-top:1px solid #eee; padding-top:8px;"><div><span class="legend-icon" style="background:#27ae60"></span>초록마을</div><strong>${counts["초록마을"]}</strong></div>`;
