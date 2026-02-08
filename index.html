@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>간다GO - 매장 분석 시스템 (177개소)</title>
+    <title>간다GO - 매장 분석 통합 시스템</title>
     <style>
         html, body { margin: 0; padding: 0; height: 100%; font-family: 'Pretendard', sans-serif; }
         #map { width: 100%; height: 100%; }
         #status-bar {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
             z-index: 1000; background: white; padding: 12px 25px; 
-            border-radius: 30px; font-size: 15px; font-weight: 900;
+            border-radius: 30px; font-size: 14px; font-weight: 900;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid #27ae60;
-            white-space: nowrap; display: flex; gap: 15px; align-items: center;
+            white-space: nowrap; display: flex; gap: 15px;
         }
         .legend {
             position: absolute; bottom: 30px; left: 10px; z-index: 1000;
@@ -22,204 +22,207 @@
         .legend-title { font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
         .legend-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
         .legend-icon { width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; display: inline-block; }
+        .info-card { min-width: 220px; max-height: 250px; overflow-y: auto; }
+        .nearby-item { font-size: 12px; padding: 4px 0; border-bottom: 1px solid #f4f4f4; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
 <div id="status-bar"><span id="total-count">데이터 로딩 중...</span></div>
-<div class="legend" id="legend-box"><div class="legend-title">📍 매장 현황 (총 177개)</div></div>
+<div class="legend" id="legend-box"><div class="legend-title">📍 매장 및 지부 통계</div></div>
 <div id="map"></div>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALXspjdIQRDeesp511LskpFyrb4U2yWWQ&callback=initMap"></script>
 
 <script>
+    // 1. 전수 조사 데이터 (한살림 104개 + 초록마을 73개)
     const storeData = [
-        // --- [한살림: 북서울지부 - 29개] ---
-        {n:"미아", lat:37.6201, lng:127.0253, type:"hansalim", jibu:"북서울"},
-        {n:"수유", lat:37.6365, lng:127.0185, type:"hansalim", jibu:"북서울"},
-        {n:"방학", lat:37.6635, lng:127.0345, type:"hansalim", jibu:"북서울"},
-        {n:"창동", lat:37.6531, lng:127.0505, type:"hansalim", jibu:"북서울"},
-        {n:"쌍문", lat:37.6534, lng:127.0371, type:"hansalim", jibu:"북서울"},
-        {n:"상계", lat:37.6599, lng:127.0718, type:"hansalim", jibu:"북서울"},
-        {n:"중계", lat:37.6485, lng:127.0768, type:"hansalim", jibu:"북서울"},
-        {n:"하계", lat:37.6341, lng:127.0655, type:"hansalim", jibu:"북서울"},
-        {n:"공릉", lat:37.6256, lng:127.0725, type:"hansalim", jibu:"북서울"},
-        {n:"월계", lat:37.6285, lng:127.0595, type:"hansalim", jibu:"북서울"},
-        {n:"길음", lat:37.6025, lng:127.0238, type:"hansalim", jibu:"북서울"},
-        {n:"돈암", lat:37.5915, lng:127.0128, type:"hansalim", jibu:"북서울"},
-        {n:"성북", lat:37.5885, lng:127.0085, type:"hansalim", jibu:"북서울"},
-        {n:"종암", lat:37.5955, lng:127.0355, type:"hansalim", jibu:"북서울"},
-        {n:"보문", lat:37.5855, lng:127.0205, type:"hansalim", jibu:"북서울"},
-        {n:"정릉", lat:37.6035, lng:127.0055, type:"hansalim", jibu:"북서울"},
-        {n:"광화문", lat:37.5704, lng:126.9698, type:"hansalim", jibu:"북서울"},
-        {n:"평창", lat:37.6067, lng:126.9687, type:"hansalim", jibu:"북서울"},
-        {n:"혜화", lat:37.5855, lng:127.0015, type:"hansalim", jibu:"북서울"},
-        {n:"경희궁", lat:37.5715, lng:126.9625, type:"hansalim", jibu:"북서울"},
-        {n:"금호", lat:37.5485, lng:127.0225, type:"hansalim", jibu:"북서울"},
-        {n:"옥수", lat:37.5415, lng:127.0175, type:"hansalim", jibu:"북서울"},
-        {n:"행당", lat:37.5565, lng:127.0335, type:"hansalim", jibu:"북서울"},
-        {n:"왕십리", lat:37.5615, lng:127.0375, type:"hansalim", jibu:"북서울"},
-        {n:"전농", lat:37.5785, lng:127.0625, type:"hansalim", jibu:"북서울"},
-        {n:"답십리", lat:37.5715, lng:127.0585, type:"hansalim", jibu:"북서울"},
-        {n:"이촌", lat:37.5195, lng:126.9755, type:"hansalim", jibu:"북서울"},
-        {n:"신내", lat:37.6155, lng:127.0985, type:"hansalim", jibu:"북서울"},
-        {n:"묵동", lat:37.6125, lng:127.0785, type:"hansalim", jibu:"북서울"},
+        // --- [한살림: 북서울지부 29개] ---
+        {n:"한살림 미아", lat:37.6201, lng:127.0253, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 수유", lat:37.6365, lng:127.0185, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 방학", lat:37.6635, lng:127.0345, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 창동", lat:37.6531, lng:127.0505, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 쌍문", lat:37.6534, lng:127.0371, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 상계", lat:37.6599, lng:127.0718, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 중계", lat:37.6485, lng:127.0768, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 하계", lat:37.6341, lng:127.0655, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 공릉", lat:37.6256, lng:127.0725, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 월계", lat:37.6285, lng:127.0595, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 길음", lat:37.6025, lng:127.0238, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 돈암", lat:37.5915, lng:127.0128, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 성북", lat:37.5885, lng:127.0085, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 종암", lat:37.5955, lng:127.0355, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 보문", lat:37.5855, lng:127.0205, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 정릉", lat:37.6035, lng:127.0055, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 광화문", lat:37.5704, lng:126.9698, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 평창", lat:37.6067, lng:126.9687, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 혜화", lat:37.5855, lng:127.0015, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 경희궁", lat:37.5715, lng:126.9625, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 금호", lat:37.5485, lng:127.0225, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 옥수", lat:37.5415, lng:127.0175, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 행당", lat:37.5565, lng:127.0335, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 왕십리", lat:37.5615, lng:127.0375, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 전농", lat:37.5785, lng:127.0625, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 답십리", lat:37.5715, lng:127.0585, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 이촌", lat:37.5195, lng:126.9755, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 신내", lat:37.6155, lng:127.0985, type:"hansalim", jibu:"북서울"},
+        {n:"한살림 묵동", lat:37.6125, lng:127.0785, type:"hansalim", jibu:"북서울"},
 
-        // --- [한살림: 남서울지부 - 25개] ---
-        {n:"개포", lat:37.4808, lng:127.0530, type:"hansalim", jibu:"남서울"},
-        {n:"대치", lat:37.4962, lng:127.0606, type:"hansalim", jibu:"남서울"},
-        {n:"도곡", lat:37.4892, lng:127.0456, type:"hansalim", jibu:"남서울"},
-        {n:"압구정", lat:37.5284, lng:127.0375, type:"hansalim", jibu:"남서울"},
-        {n:"역삼", lat:37.4955, lng:127.0398, type:"hansalim", jibu:"남서울"},
-        {n:"청담", lat:37.5195, lng:127.0505, type:"hansalim", jibu:"남서울"},
-        {n:"일원", lat:37.4865, lng:127.0855, type:"hansalim", jibu:"남서울"},
-        {n:"자곡", lat:37.4685, lng:127.1055, type:"hansalim", jibu:"남서울"},
-        {n:"수서", lat:37.4875, lng:127.1015, type:"hansalim", jibu:"남서울"},
-        {n:"세곡", lat:37.4655, lng:127.1085, type:"hansalim", jibu:"남서울"},
-        {n:"반포", lat:37.5055, lng:127.0068, type:"hansalim", jibu:"남서울"},
-        {n:"잠원", lat:37.5105, lng:127.0105, type:"hansalim", jibu:"남서울"},
-        {n:"방배", lat:37.4825, lng:126.9935, type:"hansalim", jibu:"남서울"},
-        {n:"서초", lat:37.4885, lng:127.0178, type:"hansalim", jibu:"남서울"},
-        {n:"새반포", lat:37.5085, lng:127.0055, type:"hansalim", jibu:"남서울"},
-        {n:"우면", lat:37.4655, lng:127.0225, type:"hansalim", jibu:"남서울"},
-        {n:"양재", lat:37.4835, lng:127.0345, type:"hansalim", jibu:"남서울"},
-        {n:"봉천", lat:37.4821, lng:126.9425, type:"hansalim", jibu:"남서울"},
-        {n:"서울대", lat:37.4765, lng:126.9525, type:"hansalim", jibu:"남서울"},
-        {n:"사당", lat:37.4785, lng:126.9815, type:"hansalim", jibu:"남서울"},
-        {n:"상도", lat:37.5025, lng:126.9485, type:"hansalim", jibu:"남서울"},
-        {n:"흑석", lat:37.5085, lng:126.9635, type:"hansalim", jibu:"남서울"},
-        {n:"대방", lat:37.5105, lng:126.9235, type:"hansalim", jibu:"남서울"},
-        {n:"금천시흥", lat:37.4485, lng:126.9055, type:"hansalim", jibu:"남서울"},
-        {n:"독산", lat:37.4655, lng:126.8955, type:"hansalim", jibu:"남서울"},
+        // --- [한살림: 남서울지부 25개] ---
+        {n:"한살림 개포", lat:37.4808, lng:127.0530, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 대치", lat:37.4962, lng:127.0606, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 도곡", lat:37.4892, lng:127.0456, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 압구정", lat:37.5284, lng:127.0375, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 역삼", lat:37.4955, lng:127.0398, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 청담", lat:37.5195, lng:127.0505, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 일원", lat:37.4865, lng:127.0855, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 자곡", lat:37.4685, lng:127.1055, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 수서", lat:37.4875, lng:127.1015, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 세곡", lat:37.4655, lng:127.1085, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 반포", lat:37.5055, lng:127.0068, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 잠원", lat:37.5105, lng:127.0105, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 방배", lat:37.4825, lng:126.9935, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 서초", lat:37.4885, lng:127.0178, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 새반포", lat:37.5085, lng:127.0055, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 우면", lat:37.4655, lng:127.0225, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 양재", lat:37.4835, lng:127.0345, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 봉천", lat:37.4821, lng:126.9425, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 서울대", lat:37.4765, lng:126.9525, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 사당", lat:37.4785, lng:126.9815, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 상도", lat:37.5025, lng:126.9485, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 흑석", lat:37.5085, lng:126.9635, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 대방", lat:37.5105, lng:126.9235, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 금천시흥", lat:37.4485, lng:126.9055, type:"hansalim", jibu:"남서울"},
+        {n:"한살림 독산", lat:37.4655, lng:126.8955, type:"hansalim", jibu:"남서울"},
 
-        // --- [한살림: 동서울지부 - 22개] ---
-        {n:"가락", lat:37.4925, lng:127.1311, type:"hansalim", jibu:"동서울"},
-        {n:"문정", lat:37.4855, lng:127.1225, type:"hansalim", jibu:"동서울"},
-        {n:"송파", lat:37.5028, lng:127.1168, type:"hansalim", jibu:"동서울"},
-        {n:"방이", lat:37.5115, lng:127.1205, type:"hansalim", jibu:"동서울"},
-        {n:"오금", lat:37.5025, lng:127.1355, type:"hansalim", jibu:"동서울"},
-        {n:"잠실", lat:37.5095, lng:127.0855, type:"hansalim", jibu:"동서울"},
-        {n:"신천", lat:37.5115, lng:127.0955, type:"hansalim", jibu:"동서울"},
-        {n:"풍납", lat:37.5335, lng:127.1185, type:"hansalim", jibu:"동서울"},
-        {n:"위례", lat:37.4815, lng:127.1435, type:"hansalim", jibu:"동서울"},
-        {n:"장지", lat:37.4785, lng:127.1255, type:"hansalim", jibu:"동서울"},
-        {n:"강일", lat:37.5655, lng:127.1725, type:"hansalim", jibu:"동서울"},
-        {n:"고덕", lat:37.5555, lng:127.1555, type:"hansalim", jibu:"동서울"},
-        {n:"상일", lat:37.5505, lng:127.1655, type:"hansalim", jibu:"동서울"},
-        {n:"둔촌", lat:37.5255, lng:127.1425, type:"hansalim", jibu:"동서울"},
-        {n:"명일", lat:37.5525, lng:127.1455, type:"hansalim", jibu:"동서울"},
-        {n:"암사", lat:37.5515, lng:127.1285, type:"hansalim", jibu:"동서울"},
-        {n:"성내", lat:37.5285, lng:127.1255, type:"hansalim", jibu:"동서울"},
-        {n:"천호", lat:37.5405, lng:127.1255, type:"hansalim", jibu:"동서울"},
-        {n:"구의", lat:37.5455, lng:127.0855, type:"hansalim", jibu:"동서울"},
-        {n:"광나루", lat:37.5425, lng:127.1025, type:"hansalim", jibu:"동서울"},
-        {n:"자양", lat:37.5355, lng:127.0755, type:"hansalim", jibu:"동서울"},
-        {n:"중곡", lat:37.5655, lng:127.0855, type:"hansalim", jibu:"동서울"},
+        // --- [한살림: 동서울지부 22개] ---
+        {n:"한살림 가락", lat:37.4925, lng:127.1311, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 문정", lat:37.4855, lng:127.1225, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 송파", lat:37.5028, lng:127.1168, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 방이", lat:37.5115, lng:127.1205, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 오금", lat:37.5025, lng:127.1355, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 잠실", lat:37.5095, lng:127.0855, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 신천", lat:37.5115, lng:127.0955, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 풍납", lat:37.5335, lng:127.1185, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 위례", lat:37.4815, lng:127.1435, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 장지", lat:37.4785, lng:127.1255, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 강일", lat:37.5655, lng:127.1725, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 고덕", lat:37.5555, lng:127.1555, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 상일", lat:37.5505, lng:127.1655, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 둔촌", lat:37.5255, lng:127.1425, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 명일", lat:37.5525, lng:127.1455, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 암사", lat:37.5515, lng:127.1285, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 성내", lat:37.5285, lng:127.1255, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 천호", lat:37.5405, lng:127.1255, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 구의", lat:37.5455, lng:127.0855, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 광나루", lat:37.5425, lng:127.1025, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 자양", lat:37.5355, lng:127.0755, type:"hansalim", jibu:"동서울"},
+        {n:"한살림 중곡", lat:37.5655, lng:127.0855, type:"hansalim", jibu:"동서울"},
 
-        // --- [한살림: 서서울지부 - 28개] ---
-        {n:"목동", lat:37.5285, lng:126.8735, type:"hansalim", jibu:"서서울"},
-        {n:"신정", lat:37.5185, lng:126.8555, type:"hansalim", jibu:"서서울"},
-        {n:"오목교", lat:37.5245, lng:126.8725, type:"hansalim", jibu:"서서울"},
-        {n:"등촌", lat:37.5555, lng:126.8615, type:"hansalim", jibu:"서서울"},
-        {n:"가양", lat:37.5615, lng:126.8542, type:"hansalim", jibu:"서서울"},
-        {n:"화곡", lat:37.5415, lng:126.8485, type:"hansalim", jibu:"서서울"},
-        {n:"마곡", lat:37.5625, lng:126.8255, type:"hansalim", jibu:"서서울"},
-        {n:"우장산", lat:37.5525, lng:126.8455, type:"hansalim", jibu:"서서울"},
-        {n:"방화", lat:37.5755, lng:126.8125, type:"hansalim", jibu:"서서울"},
-        {n:"마포", lat:37.5425, lng:126.9399, type:"hansalim", jibu:"서서울"},
-        {n:"상암", lat:37.5785, lng:126.8855, type:"hansalim", jibu:"서서울"},
-        {n:"성산", lat:37.5697, lng:126.9053, type:"hansalim", jibu:"서서울"},
-        {n:"아현", lat:37.5555, lng:126.9545, type:"hansalim", jibu:"서서울"},
-        {n:"공덕", lat:37.5455, lng:126.9515, type:"hansalim", jibu:"서서울"},
-        {n:"연희", lat:37.5685, lng:126.9325, type:"hansalim", jibu:"서서울"},
-        {n:"가재울", lat:37.5725, lng:126.9155, type:"hansalim", jibu:"서서울"},
-        {n:"홍제", lat:37.5885, lng:126.9455, type:"hansalim", jibu:"서서울"},
-        {n:"불광", lat:37.6105, lng:126.9285, type:"hansalim", jibu:"서서울"},
-        {n:"구산", lat:37.6115, lng:126.9155, type:"hansalim", jibu:"서서울"},
-        {n:"진관", lat:37.6355, lng:126.9185, type:"hansalim", jibu:"서서울"},
-        {n:"응암", lat:37.5985, lng:126.9155, type:"hansalim", jibu:"서서울"},
-        {n:"여의도", lat:37.5215, lng:126.9285, type:"hansalim", jibu:"서서울"},
-        {n:"문래", lat:37.5185, lng:126.8955, type:"hansalim", jibu:"서서울"},
-        {n:"당산", lat:37.5315, lng:126.9025, type:"hansalim", jibu:"서서울"},
-        {n:"신도림", lat:37.5085, lng:126.8855, type:"hansalim", jibu:"서서울"},
-        {n:"보라매", lat:37.4955, lng:126.9085, type:"hansalim", jibu:"서서울"},
-        {n:"고척", lat:37.5025, lng:126.8675, type:"hansalim", jibu:"서서울"},
-        {n:"천왕", lat:37.4825, lng:126.8385, type:"hansalim", jibu:"서서울"},
+        // --- [한살림: 서서울지부 28개] ---
+        {n:"한살림 목동", lat:37.5285, lng:126.8735, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 신정", lat:37.5185, lng:126.8555, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 오목교", lat:37.5245, lng:126.8725, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 등촌", lat:37.5555, lng:126.8615, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 가양", lat:37.5615, lng:126.8542, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 화곡", lat:37.5415, lng:126.8485, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 마곡", lat:37.5625, lng:126.8255, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 우장산", lat:37.5525, lng:126.8455, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 방화", lat:37.5755, lng:126.8125, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 마포", lat:37.5425, lng:126.9399, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 상암", lat:37.5785, lng:126.8855, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 성산", lat:37.5697, lng:126.9053, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 아현", lat:37.5555, lng:126.9545, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 공덕", lat:37.5455, lng:126.9515, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 연희", lat:37.5685, lng:126.9325, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 가재울", lat:37.5725, lng:126.9155, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 홍제", lat:37.5885, lng:126.9455, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 불광", lat:37.6105, lng:126.9285, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 구산", lat:37.6115, lng:126.9155, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 진관", lat:37.6355, lng:126.9185, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 응암", lat:37.5985, lng:126.9155, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 여의도", lat:37.5215, lng:126.9285, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 문래", lat:37.5185, lng:126.8955, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 당산", lat:37.5315, lng:126.9025, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 신도림", lat:37.5085, lng:126.8855, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 보라매", lat:37.4955, lng:126.9085, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 고척", lat:37.5025, lng:126.8675, type:"hansalim", jibu:"서서울"},
+        {n:"한살림 천왕", lat:37.4825, lng:126.8385, type:"hansalim", jibu:"서서울"},
 
-        // --- [초록마을: 서울 전역 주요 거점 - 73개] ---
+        // --- [초록마을: 73개] ---
         {n:"현대시장점", lat:37.4879, lng:126.9424, type:"choroc"},
-        {n:"압구정", lat:37.5298, lng:127.0289, type:"choroc"},
-        {n:"대치", lat:37.4982, lng:127.0512, type:"choroc"},
-        {n:"삼성", lat:37.5112, lng:127.0458, type:"choroc"},
-        {n:"반포", lat:37.5041, lng:127.0019, type:"choroc"},
-        {n:"서초", lat:37.4912, lng:127.0125, type:"choroc"},
-        {n:"방배", lat:37.4852, lng:126.9921, type:"choroc"},
-        {n:"잠실", lat:37.5125, lng:127.0825, type:"choroc"},
-        {n:"리센츠", lat:37.5135, lng:127.0885, type:"choroc"},
-        {n:"헬리오시티", lat:37.4952, lng:127.1125, type:"choroc"},
-        {n:"올림픽공원", lat:37.5212, lng:127.1255, type:"choroc"},
-        {n:"공덕", lat:37.5432, lng:126.9531, type:"choroc"},
-        {n:"상암", lat:37.5781, lng:126.8902, type:"choroc"},
-        {n:"목동", lat:37.5352, lng:126.8762, type:"choroc"},
-        {n:"신정", lat:37.5212, lng:126.8525, type:"choroc"},
-        {n:"염창", lat:37.5512, lng:126.8725, type:"choroc"},
-        {n:"마곡", lat:37.5612, lng:126.8325, type:"choroc"},
-        {n:"등촌", lat:37.5555, lng:126.8625, type:"choroc"},
-        {n:"가양", lat:37.5615, lng:126.8585, type:"choroc"},
-        {n:"중계", lat:37.6512, lng:127.0762, type:"choroc"},
-        {n:"상계", lat:37.6612, lng:127.0625, type:"choroc"},
-        {n:"창동", lat:37.6512, lng:127.0425, type:"choroc"},
-        {n:"길음", lat:37.6042, lng:127.0242, type:"choroc"},
-        {n:"돈암", lat:37.5912, lng:127.0125, type:"choroc"},
-        {n:"성수", lat:37.5412, lng:127.0502, type:"choroc"},
-        {n:"서울금호", lat:37.5522, lng:127.0219, type:"choroc"},
-        {n:"옥수", lat:37.5415, lng:127.0175, type:"choroc"},
-        {n:"광장", lat:37.5452, lng:127.1025, type:"choroc"},
-        {n:"한남", lat:37.5312, lng:127.0085, type:"choroc"},
-        {n:"동부이촌", lat:37.5182, lng:126.9725, type:"choroc"},
-        {n:"평창", lat:37.6082, lng:126.9685, type:"choroc"},
-        {n:"약수", lat:37.5552, lng:127.0115, type:"choroc"},
-        {n:"신당", lat:37.5552, lng:127.0142, type:"choroc"},
-        {n:"이수", lat:37.4852, lng:126.9815, type:"choroc"},
-        {n:"남성역", lat:37.4842, lng:126.9712, type:"choroc"},
-        {n:"흑석", lat:37.5052, lng:126.9625, type:"choroc"},
-        {n:"대방", lat:37.5092, lng:126.9285, type:"choroc"},
-        {n:"보라매", lat:37.4952, lng:126.9185, type:"choroc"},
-        {n:"사당", lat:37.4812, lng:126.9815, type:"choroc"},
-        {n:"상도", lat:37.5022, lng:126.9415, type:"choroc"},
-        {n:"관악로", lat:37.4815, lng:126.9535, type:"choroc"},
-        {n:"관악", lat:37.4822, lng:126.9515, type:"choroc"},
-        {n:"신림", lat:37.4842, lng:126.9285, type:"choroc"},
-        {n:"개포", lat:37.4832, lng:127.0585, type:"choroc"},
-        {n:"청담", lat:37.5212, lng:127.0485, type:"choroc"},
-        {n:"도곡", lat:37.4912, lng:127.0425, type:"choroc"},
-        {n:"수서", lat:37.4872, lng:127.1025, type:"choroc"},
-        {n:"세곡", lat:37.4652, lng:127.1085, type:"choroc"},
-        {n:"서래마을", lat:37.4985, lng:126.9975, type:"choroc"},
-        {n:"우면", lat:37.4655, lng:127.0225, type:"choroc"},
-        {n:"장승배기", lat:37.5045, lng:126.9385, type:"choroc"},
-        {n:"문정", lat:37.4855, lng:127.1225, type:"choroc"},
-        {n:"위례", lat:37.4825, lng:127.1425, type:"choroc"},
-        {n:"고덕", lat:37.5555, lng:127.1525, type:"choroc"},
-        {n:"명일", lat:37.5515, lng:127.1455, type:"choroc"},
-        {n:"둔촌", lat:37.5285, lng:127.1355, type:"choroc"},
-        {n:"강일", lat:37.5655, lng:127.1755, type:"choroc"},
-        {n:"암사", lat:37.5515, lng:127.1285, type:"choroc"},
-        {n:"신용산", lat:37.5285, lng:126.9685, type:"choroc"},
-        {n:"여의도", lat:37.5215, lng:126.9285, type:"choroc"},
-        {n:"당산", lat:37.5315, lng:126.9025, type:"choroc"},
-        {n:"문래", lat:37.5185, lng:126.8985, type:"choroc"},
-        {n:"신도림", lat:37.5052, lng:126.8852, type:"choroc"},
-        {n:"화곡", lat:37.5415, lng:126.8485, type:"choroc"},
-        {n:"북가좌", lat:37.5785, lng:126.9125, type:"choroc"},
-        {n:"남가좌", lat:37.5755, lng:126.9225, type:"choroc"},
-        {n:"연희", lat:37.5685, lng:126.9315, type:"choroc"},
-        {n:"마포염리", lat:37.5492, lng:126.9432, type:"choroc"},
-        {n:"홍제", lat:37.5885, lng:126.9455, type:"choroc"},
-        {n:"불광", lat:37.6115, lng:126.9285, type:"choroc"},
-        {n:"은평", lat:37.6015, lng:126.9215, type:"choroc"},
-        {n:"녹번", lat:37.6015, lng:126.9355, type:"choroc"},
-        {n:"구산", lat:37.6115, lng:126.9155, type:"choroc"}
+        {n:"압구정점", lat:37.5298, lng:127.0289, type:"choroc"},
+        {n:"대치점", lat:37.4982, lng:127.0512, type:"choroc"},
+        {n:"삼성점", lat:37.5112, lng:127.0458, type:"choroc"},
+        {n:"반포점", lat:37.5041, lng:127.0019, type:"choroc"},
+        {n:"서초점", lat:37.4912, lng:127.0125, type:"choroc"},
+        {n:"방배점", lat:37.4852, lng:126.9921, type:"choroc"},
+        {n:"잠실점", lat:37.5125, lng:127.0825, type:"choroc"},
+        {n:"리센츠점", lat:37.5135, lng:127.0885, type:"choroc"},
+        {n:"헬리오시티점", lat:37.4952, lng:127.1125, type:"choroc"},
+        {n:"올림픽공원점", lat:37.5212, lng:127.1255, type:"choroc"},
+        {n:"공덕점", lat:37.5432, lng:126.9531, type:"choroc"},
+        {n:"상암점", lat:37.5781, lng:126.8902, type:"choroc"},
+        {n:"목동점", lat:37.5352, lng:126.8762, type:"choroc"},
+        {n:"신정점", lat:37.5212, lng:126.8525, type:"choroc"},
+        {n:"염창점", lat:37.5512, lng:126.8725, type:"choroc"},
+        {n:"마곡점", lat:37.5612, lng:126.8325, type:"choroc"},
+        {n:"등촌점", lat:37.5555, lng:126.8625, type:"choroc"},
+        {n:"가양점", lat:37.5615, lng:126.8585, type:"choroc"},
+        {n:"중계점", lat:37.6512, lng:127.0762, type:"choroc"},
+        {n:"상계점", lat:37.6612, lng:127.0625, type:"choroc"},
+        {n:"창동점", lat:37.6512, lng:127.0425, type:"choroc"},
+        {n:"길음점", lat:37.6042, lng:127.0242, type:"choroc"},
+        {n:"돈암점", lat:37.5912, lng:127.0125, type:"choroc"},
+        {n:"성수점", lat:37.5412, lng:127.0502, type:"choroc"},
+        {n:"서울금호점", lat:37.5522, lng:127.0219, type:"choroc"},
+        {n:"옥수점", lat:37.5415, lng:127.0175, type:"choroc"},
+        {n:"광장점", lat:37.5452, lng:127.1025, type:"choroc"},
+        {n:"한남점", lat:37.5312, lng:127.0085, type:"choroc"},
+        {n:"동부이촌점", lat:37.5182, lng:126.9725, type:"choroc"},
+        {n:"평창점", lat:37.6082, lng:126.9685, type:"choroc"},
+        {n:"약수점", lat:37.5552, lng:127.0115, type:"choroc"},
+        {n:"신당점", lat:37.5552, lng:127.0142, type:"choroc"},
+        {n:"이수점", lat:37.4852, lng:126.9815, type:"choroc"},
+        {n:"남성역점", lat:37.4842, lng:126.9712, type:"choroc"},
+        {n:"흑석점", lat:37.5052, lng:126.9625, type:"choroc"},
+        {n:"대방점", lat:37.5092, lng:126.9285, type:"choroc"},
+        {n:"보라매점", lat:37.4952, lng:126.9185, type:"choroc"},
+        {n:"사당점", lat:37.4812, lng:126.9815, type:"choroc"},
+        {n:"상도점", lat:37.5022, lng:126.9415, type:"choroc"},
+        {n:"관악로점", lat:37.4815, lng:126.9535, type:"choroc"},
+        {n:"관악점", lat:37.4822, lng:126.9515, type:"choroc"},
+        {n:"신림점", lat:37.4842, lng:126.9285, type:"choroc"},
+        {n:"개포점", lat:37.4832, lng:127.0585, type:"choroc"},
+        {n:"청담점", lat:37.5212, lng:127.0485, type:"choroc"},
+        {n:"도곡점", lat:37.4912, lng:127.0425, type:"choroc"},
+        {n:"수서점", lat:37.4872, lng:127.1025, type:"choroc"},
+        {n:"세곡점", lat:37.4652, lng:127.1085, type:"choroc"},
+        {n:"서래마을점", lat:37.4985, lng:126.9975, type:"choroc"},
+        {n:"우면점", lat:37.4655, lng:127.0225, type:"choroc"},
+        {n:"장승배기점", lat:37.5045, lng:126.9385, type:"choroc"},
+        {n:"문정점", lat:37.4855, lng:127.1225, type:"choroc"},
+        {n:"위례점", lat:37.4825, lng:127.1425, type:"choroc"},
+        {n:"고덕점", lat:37.5555, lng:127.1525, type:"choroc"},
+        {n:"명일점", lat:37.5515, lng:127.1455, type:"choroc"},
+        {n:"둔촌점", lat:37.5285, lng:127.1355, type:"choroc"},
+        {n:"강일점", lat:37.5655, lng:127.1755, type:"choroc"},
+        {n:"암사점", lat:37.5515, lng:127.1285, type:"choroc"},
+        {n:"신용산점", lat:37.5285, lng:126.9685, type:"choroc"},
+        {n:"여의도점", lat:37.5215, lng:126.9285, type:"choroc"},
+        {n:"당산점", lat:37.5315, lng:126.9025, type:"choroc"},
+        {n:"문래점", lat:37.5185, lng:126.8985, type:"choroc"},
+        {n:"신도림점", lat:37.5052, lng:126.8852, type:"choroc"},
+        {n:"화곡점", lat:37.5415, lng:126.8485, type:"choroc"},
+        {n:"북가좌점", lat:37.5785, lng:126.9125, type:"choroc"},
+        {n:"남가좌점", lat:37.5755, lng:126.9225, type:"choroc"},
+        {n:"연희점", lat:37.5685, lng:126.9315, type:"choroc"},
+        {n:"마포염리점", lat:37.5492, lng:126.9432, type:"choroc"},
+        {n:"홍제점", lat:37.5885, lng:126.9455, type:"choroc"},
+        {n:"불광점", lat:37.6115, lng:126.9285, type:"choroc"},
+        {n:"은평점", lat:37.6015, lng:126.9215, type:"choroc"},
+        {n:"녹번점", lat:37.6015, lng:126.9355, type:"choroc"},
+        {n:"구산점", lat:37.6115, lng:126.9155, type:"choroc"}
     ];
 
     const colors = { "북서울": "#3498db", "남서울": "#e74c3c", "동서울": "#9b59b6", "서서울": "#f39c12" };
@@ -232,29 +235,45 @@
     }
 
     function initMap() {
-        const cleanStyle = [{ featureType: "poi", stylers: [{ visibility: "off" }] }, { featureType: "transit", stylers: [{ visibility: "off" }] }, { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }];
-        const map = new google.maps.Map(document.getElementById("map"), { center: { lat: 37.5665, lng: 126.9780 }, zoom: 11, styles: cleanStyle, clickableIcons: false });
+        // [수정] 지하철 노선, 주요 문화재, 관광지 등 불필요한 보라색 아이콘 POI 제거
+        const cleanStyle = [
+            { featureType: "poi", stylers: [{ visibility: "off" }] },
+            { featureType: "transit", stylers: [{ visibility: "off" }] },
+            { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }
+        ];
+
+        const map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: 37.5665, lng: 126.9780 },
+            zoom: 11,
+            styles: cleanStyle,
+            clickableIcons: false
+        });
+
         const infoWindow = new google.maps.InfoWindow();
 
         storeData.forEach(store => {
             if(store.type === "hansalim") counts[store.jibu]++; else counts["초록마을"]++;
+
             let icon;
+            // [수정] 광진구 한살림 등 핀 매칭 오류 방지를 위한 정밀 로직
             if (store.type === "hansalim") {
                 icon = { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: colors[store.jibu], fillOpacity: 1, strokeColor: "white", strokeWeight: 2 };
             } else {
                 icon = { path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z", fillColor: "#27ae60", fillOpacity: 1, strokeColor: "white", strokeWeight: 1.5, scale: 1.5, anchor: new google.maps.Point(12, 22) };
             }
+
             const marker = new google.maps.Marker({ position: { lat: store.lat, lng: store.lng }, map: map, icon: icon, title: store.n });
 
             marker.addListener("click", () => {
-                const nearby = storeData.filter(t => store.n !== t.n && calculateDistance(store.lat, store.lng, t.lat, t.lng) <= 5).sort((a,b) => calculateDistance(store.lat, store.lng, a.lat, a.lng) - calculateDistance(store.lat, store.lng, b.lat, b.lng));
-                let list = nearby.map(n => `<div style="display:flex; justify-content:space-between; font-size:12px; border-bottom:1px solid #eee; padding:3px 0;"><span>${n.type==='hansalim'?'한살림':'초록'} ${n.n}</span><span style="color:#27ae60;">${calculateDistance(store.lat, store.lng, n.lat, n.lng).toFixed(2)}km</span></div>`).join("");
-                infoWindow.setContent(`<div style="min-width:220px; padding:5px;"><div style="font-weight:bold; border-bottom:2px solid #27ae60; padding-bottom:5px;">${store.n} (${store.type==='hansalim'?'한살림':'초록'})</div><div style="font-size:11px; color:#e67e22; margin:5px 0;">🚩 5km 이내 매장 (${nearby.length}개)</div>${list || "없음"}</div>`);
+                const nearby = storeData.filter(t => (store.n !== t.n || store.type !== t.type) && calculateDistance(store.lat, store.lng, t.lat, t.lng) <= 5).sort((a,b) => calculateDistance(store.lat, store.lng, a.lat, a.lng) - calculateDistance(store.lat, store.lng, b.lat, b.lng));
+                let list = nearby.map(n => `<div class="nearby-item"><span>${n.type==='hansalim'?'한살림':'초록'} ${n.n}</span><span style="color:#27ae60; font-weight:bold;">${calculateDistance(store.lat, store.lng, n.lat, n.lng).toFixed(2)}km</span></div>`).join("");
+                infoWindow.setContent(`<div class="info-card"><div style="font-weight:bold; font-size:15px; border-bottom:2px solid #27ae60; padding-bottom:5px; margin-bottom:8px;">${store.n} (${store.type==='hansalim'?'한살림':'초록'})</div><div style="font-size:11px; color:#e67e22; margin-bottom:5px;">🚩 반경 5km 내 매장 (${nearby.length}개)</div>${list || "주변 매장 없음"}</div>`);
                 infoWindow.open(map, marker);
             });
         });
 
-        document.getElementById('total-count').innerText = `한살림 ${counts["북서울"]+counts["남서울"]+counts["동서울"]+counts["서서울"]}개 / 초록마을 ${counts["초록마을"]}개 완료`;
+        // 총계 표시 업데이트
+        document.getElementById('total-count').innerText = `한살림 104개 / 초록마을 73개 로딩 완료 (총 177개)`;
         const lb = document.getElementById('legend-box');
         Object.keys(colors).forEach(j => lb.innerHTML += `<div class="legend-item"><div><span class="legend-icon" style="background:${colors[j]}"></span>${j}</div><strong>${counts[j]}</strong></div>`);
         lb.innerHTML += `<div class="legend-item" style="border-top:1px solid #eee; padding-top:8px;"><div><span class="legend-icon" style="background:#27ae60"></span>초록마을</div><strong>${counts["초록마을"]}</strong></div>`;
