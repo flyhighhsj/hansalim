@@ -3,55 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>간다GO - 매장 분석 지도</title>
+    <title>간다GO - 매장 분석 시스템 (177개소)</title>
     <style>
         html, body { margin: 0; padding: 0; height: 100%; font-family: 'Pretendard', sans-serif; }
         #map { width: 100%; height: 100%; }
-        
-        /* 상단 현황판 */
         #status-bar {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
             z-index: 1000; background: white; padding: 12px 25px; 
-            border-radius: 30px; font-size: 15px; font-weight: 800;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 2px solid #27ae60;
+            border-radius: 30px; font-size: 15px; font-weight: 900;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid #27ae60;
             white-space: nowrap; display: flex; gap: 15px; align-items: center;
         }
-
-        /* 범례 박스 */
         .legend {
             position: absolute; bottom: 30px; left: 10px; z-index: 1000;
-            background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 12px; width: 160px;
+            background: white; padding: 15px; border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2); font-size: 11px; width: 170px;
         }
-        .legend-title { font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
-        .legend-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-        .legend-icon { width: 12px; height: 12px; margin-right: 8px; border-radius: 50%; display: inline-block; }
-
-        /* 팝업 스타일 */
-        .info-card { min-width: 240px; max-height: 260px; overflow-y: auto; }
-        .info-header { font-size: 16px; font-weight: bold; border-bottom: 2px solid #27ae60; padding-bottom: 5px; margin-bottom: 8px; }
-        .nearby-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-        .dist-badge { font-weight: bold; color: #27ae60; background: #e8f5e9; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+        .legend-title { font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        .legend-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+        .legend-icon { width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; display: inline-block; }
     </style>
 </head>
 <body>
 
-<div id="status-bar">
-    <span id="total-count">데이터 로딩 중...</span>
-</div>
-
-<div class="legend" id="legend-box">
-    <div class="legend-title">📍 지부별 매장 현황</div>
-</div>
-
+<div id="status-bar"><span id="total-count">데이터 로딩 중...</span></div>
+<div class="legend" id="legend-box"><div class="legend-title">📍 매장 현황 (총 177개)</div></div>
 <div id="map"></div>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALXspjdIQRDeesp511LskpFyrb4U2yWWQ&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"></script>
 
 <script>
-    // 1. [데이터셋] 한살림(85+) & 초록마을(75+) 서울 전역 매장
     const storeData = [
-        // --- [한살림 북서울지부] (강북/노원/도봉/성북/종로/중구/성동/동대문) ---
+        // --- [한살림: 북서울지부 - 29개] ---
         {n:"미아", lat:37.6201, lng:127.0253, type:"hansalim", jibu:"북서울"},
         {n:"수유", lat:37.6365, lng:127.0185, type:"hansalim", jibu:"북서울"},
         {n:"방학", lat:37.6635, lng:127.0345, type:"hansalim", jibu:"북서울"},
@@ -82,7 +65,7 @@
         {n:"신내", lat:37.6155, lng:127.0985, type:"hansalim", jibu:"북서울"},
         {n:"묵동", lat:37.6125, lng:127.0785, type:"hansalim", jibu:"북서울"},
 
-        // --- [한살림 남서울지부] (강남/서초/관악/동작/금천/용산) ---
+        // --- [한살림: 남서울지부 - 25개] ---
         {n:"개포", lat:37.4808, lng:127.0530, type:"hansalim", jibu:"남서울"},
         {n:"대치", lat:37.4962, lng:127.0606, type:"hansalim", jibu:"남서울"},
         {n:"도곡", lat:37.4892, lng:127.0456, type:"hansalim", jibu:"남서울"},
@@ -109,7 +92,7 @@
         {n:"금천시흥", lat:37.4485, lng:126.9055, type:"hansalim", jibu:"남서울"},
         {n:"독산", lat:37.4655, lng:126.8955, type:"hansalim", jibu:"남서울"},
 
-        // --- [한살림 동서울지부] (송파/강동/광진) ---
+        // --- [한살림: 동서울지부 - 22개] ---
         {n:"가락", lat:37.4925, lng:127.1311, type:"hansalim", jibu:"동서울"},
         {n:"문정", lat:37.4855, lng:127.1225, type:"hansalim", jibu:"동서울"},
         {n:"송파", lat:37.5028, lng:127.1168, type:"hansalim", jibu:"동서울"},
@@ -133,7 +116,7 @@
         {n:"자양", lat:37.5355, lng:127.0755, type:"hansalim", jibu:"동서울"},
         {n:"중곡", lat:37.5655, lng:127.0855, type:"hansalim", jibu:"동서울"},
 
-        // --- [한살림 서서울지부] (마포/서대문/은평/강서/양천/영등포/구로) ---
+        // --- [한살림: 서서울지부 - 28개] ---
         {n:"목동", lat:37.5285, lng:126.8735, type:"hansalim", jibu:"서서울"},
         {n:"신정", lat:37.5185, lng:126.8555, type:"hansalim", jibu:"서서울"},
         {n:"오목교", lat:37.5245, lng:126.8725, type:"hansalim", jibu:"서서울"},
@@ -163,7 +146,7 @@
         {n:"고척", lat:37.5025, lng:126.8675, type:"hansalim", jibu:"서서울"},
         {n:"천왕", lat:37.4825, lng:126.8385, type:"hansalim", jibu:"서서울"},
 
-        // --- [초록마을: 서울 전역 주요 거점] (누락된 현대시장점 등 75개 이상 포함) ---
+        // --- [초록마을: 서울 전역 주요 거점 - 73개] ---
         {n:"현대시장점", lat:37.4879, lng:126.9424, type:"choroc"},
         {n:"압구정", lat:37.5298, lng:127.0289, type:"choroc"},
         {n:"대치", lat:37.4982, lng:127.0512, type:"choroc"},
@@ -242,133 +225,40 @@
     const colors = { "북서울": "#3498db", "남서울": "#e74c3c", "동서울": "#9b59b6", "서서울": "#f39c12" };
     const counts = { "북서울":0, "남서울":0, "동서울":0, "서서울":0, "초록마을":0 };
 
-    // 거리 계산 함수 (Haversine Formula)
-    function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // 지구 반지름 (km)
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
     function initMap() {
-        // [지도 스타일] 불필요한 POI(관광지, 지하철 등) 제거 -> 깔끔한 배달 지도
-        const cleanStyle = [
-            { featureType: "poi", stylers: [{ visibility: "off" }] },
-            { featureType: "transit", stylers: [{ visibility: "off" }] },
-            { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }
-        ];
-
-        const map = new google.maps.Map(document.getElementById("map"), {
-            center: { lat: 37.5665, lng: 126.9780 }, // 서울 시청 중심
-            zoom: 11,
-            styles: cleanStyle,
-            disableDefaultUI: false,
-            clickableIcons: false
-        });
-
+        const cleanStyle = [{ featureType: "poi", stylers: [{ visibility: "off" }] }, { featureType: "transit", stylers: [{ visibility: "off" }] }, { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] }];
+        const map = new google.maps.Map(document.getElementById("map"), { center: { lat: 37.5665, lng: 126.9780 }, zoom: 11, styles: cleanStyle, clickableIcons: false });
         const infoWindow = new google.maps.InfoWindow();
 
         storeData.forEach(store => {
-            // 카운팅
-            if(store.type === "hansalim") counts[store.jibu]++;
-            else counts["초록마을"]++;
-
-            // 마커 아이콘 설정
+            if(store.type === "hansalim") counts[store.jibu]++; else counts["초록마을"]++;
             let icon;
             if (store.type === "hansalim") {
-                icon = {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 6,
-                    fillColor: colors[store.jibu],
-                    fillOpacity: 1,
-                    strokeColor: "white",
-                    strokeWeight: 2,
-                };
+                icon = { path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: colors[store.jibu], fillOpacity: 1, strokeColor: "white", strokeWeight: 2 };
             } else {
-                icon = {
-                    path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z", // 핀 모양
-                    fillColor: "#27ae60",
-                    fillOpacity: 1,
-                    strokeColor: "white",
-                    strokeWeight: 1.5,
-                    scale: 1.5,
-                    anchor: new google.maps.Point(12, 22)
-                };
+                icon = { path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z", fillColor: "#27ae60", fillOpacity: 1, strokeColor: "white", strokeWeight: 1.5, scale: 1.5, anchor: new google.maps.Point(12, 22) };
             }
+            const marker = new google.maps.Marker({ position: { lat: store.lat, lng: store.lng }, map: map, icon: icon, title: store.n });
 
-            const marker = new google.maps.Marker({
-                position: { lat: store.lat, lng: store.lng },
-                map: map,
-                icon: icon,
-                title: store.n
-            });
-
-            // [클릭 이벤트] 5km 반경 매장 분석
             marker.addListener("click", () => {
-                const neighbors = [];
-                storeData.forEach(target => {
-                    if (store.n === target.n && store.type === target.type) return;
-                    const dist = getDistance(store.lat, store.lng, target.lat, target.lng);
-                    if (dist <= 5) {
-                        neighbors.push({ ...target, dist: dist });
-                    }
-                });
-
-                neighbors.sort((a, b) => a.dist - b.dist);
-
-                let listHtml = "";
-                if (neighbors.length > 0) {
-                    neighbors.forEach(n => {
-                        const typeName = n.type === 'hansalim' ? '한살림' : '초록마을';
-                        listHtml += `
-                            <div class="nearby-item">
-                                <span>${typeName} ${n.n}</span>
-                                <span class="dist-badge">${n.dist.toFixed(2)}km</span>
-                            </div>`;
-                    });
-                } else {
-                    listHtml = "<div style='padding:10px; color:#999; text-align:center;'>반경 5km 내 매장 없음</div>";
-                }
-
-                const content = `
-                    <div class="info-card">
-                        <div class="info-header">${store.n} <span style="font-size:12px; font-weight:normal; color:#555;">(5km 분석)</span></div>
-                        <div style="font-size:12px; margin-bottom:5px;"><b>총 ${neighbors.length}개</b> 매장 발견</div>
-                        ${listHtml}
-                    </div>
-                `;
-                
-                infoWindow.setContent(content);
+                const nearby = storeData.filter(t => store.n !== t.n && calculateDistance(store.lat, store.lng, t.lat, t.lng) <= 5).sort((a,b) => calculateDistance(store.lat, store.lng, a.lat, a.lng) - calculateDistance(store.lat, store.lng, b.lat, b.lng));
+                let list = nearby.map(n => `<div style="display:flex; justify-content:space-between; font-size:12px; border-bottom:1px solid #eee; padding:3px 0;"><span>${n.type==='hansalim'?'한살림':'초록'} ${n.n}</span><span style="color:#27ae60;">${calculateDistance(store.lat, store.lng, n.lat, n.lng).toFixed(2)}km</span></div>`).join("");
+                infoWindow.setContent(`<div style="min-width:220px; padding:5px;"><div style="font-weight:bold; border-bottom:2px solid #27ae60; padding-bottom:5px;">${store.n} (${store.type==='hansalim'?'한살림':'초록'})</div><div style="font-size:11px; color:#e67e22; margin:5px 0;">🚩 5km 이내 매장 (${nearby.length}개)</div>${list || "없음"}</div>`);
                 infoWindow.open(map, marker);
             });
         });
 
-        // 통계 업데이트
-        const totalHansalim = storeData.filter(s => s.type === 'hansalim').length;
-        document.getElementById('total-count').innerText = `서울 전체 매장: 한살림 ${totalHansalim}개 / 초록마을 ${counts["초록마을"]}개`;
-
-        // 범례 업데이트
-        const legendBox = document.getElementById('legend-box');
-        Object.keys(colors).forEach(jibu => {
-            if(counts[jibu] > 0) {
-                legendBox.innerHTML += `
-                    <div class="legend-item">
-                        <div><span class="legend-icon" style="background:${colors[jibu]}"></span>${jibu}</div>
-                        <strong>${counts[jibu]}</strong>
-                    </div>`;
-            }
-        });
-        legendBox.innerHTML += `
-            <div class="legend-item" style="margin-top:8px; padding-top:8px; border-top:1px solid #ddd;">
-                <div><span class="legend-icon" style="background:#27ae60"></span>초록마을</div>
-                <strong>${counts["초록마을"]}</strong>
-            </div>`;
+        document.getElementById('total-count').innerText = `한살림 ${counts["북서울"]+counts["남서울"]+counts["동서울"]+counts["서서울"]}개 / 초록마을 ${counts["초록마을"]}개 완료`;
+        const lb = document.getElementById('legend-box');
+        Object.keys(colors).forEach(j => lb.innerHTML += `<div class="legend-item"><div><span class="legend-icon" style="background:${colors[j]}"></span>${j}</div><strong>${counts[j]}</strong></div>`);
+        lb.innerHTML += `<div class="legend-item" style="border-top:1px solid #eee; padding-top:8px;"><div><span class="legend-icon" style="background:#27ae60"></span>초록마을</div><strong>${counts["초록마을"]}</strong></div>`;
     }
 </script>
-
 </body>
 </html>
